@@ -8,19 +8,19 @@ interface control_unit_if;
 
    word_t instr;
    logic WEN, brnch_eq, brnch_ne, jmp, JR, JALflag;
-   logic cuDRE, cuDWE, cuIRE, cuHALT;
+   logic cuDRE, cuDWE, cuIRE;
    aluop_t ALUOP;
    logic ALUsrc, EXTop, RegDst, MemToReg, SHIFTflag, LUIflag;
 
    //CU ports
    modport cu(
 	      input instr,
-	      output WEN, brnch_eq, brnch_ne, jmp, JR, JALflag, cuDRE, cuDWE, cuIRE, ALUOP, ALUsrc, EXTop, RegDst, MemToReg, SHIFTflag, LUIflag, cuHALT
+	      output WEN, brnch_eq, brnch_ne, jmp, JR, JALflag, cuDRE, cuDWE, cuIRE, cuHALT, ALUOP, ALUsrc, EXTop, RegDst, MemToReg, SHIFTflag, LUIflag
 	      );
 
    //CU TB
    modport tb (
-	       input WEN, brnch_eq, brnch_ne, jmp, JR, JALflag, cuDRE, cuDWE, cuIRE, ALUOP, ALUsrc, EXTop, RegDst, MemToReg, SHIFTflag, LUIflag, cuHALT,
+	       input WEN, brnch_eq, brnch_ne, jmp, JR, JALflag, cuDRE, cuDWE, cuIRE, cuHALT, ALUOP, ALUsrc, EXTop, RegDst, MemToReg, SHIFTflag, LUIflag,
 	       output instr
 	       );
 
