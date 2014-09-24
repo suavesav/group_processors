@@ -7,9 +7,12 @@ module memwb
     pipeline_register_if.memwb memwbif
   );
 
-  if(!nRST)
+  always_ff @(posedge CLK, negedge nRST)
   begin
+    if(!nRST)
+    begin
 
+    end
   end
 
 endmodule // MEMORY_WRITEBACK
