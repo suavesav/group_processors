@@ -11,7 +11,19 @@ module memwb
   begin
     if(!nRST)
     begin
-
+      memwbif.wbMemToReg <= 0;
+      memwbif.wbwsel <= 0;
+      memwbif.wbWEN <= 0;
+      memwbif.wbOutput_Port <= '0;
+      memwbif.wbdmemload <= '0;
+    end
+    else if(memwbif.memW)
+    begin
+      memwbif.wbMemToReg <= memwbif.memMemToReg;
+      memwbif.wbwsel <= memwbif.memwsel;
+      memwbif.wbWEN <= memwbif.memWEN;
+      memwbif.wbOutput_Port <= memwbif.memOutput_Port;
+      memwbif.wbdmemload <= memwbif.memdmemload;
     end
   end
 
