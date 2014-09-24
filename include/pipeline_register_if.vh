@@ -17,11 +17,11 @@ interface pipeline_register_if;
   import cpu_types_pkg::*;
 
   //INSTRUCTION FETCH
-  logic ifW, ifnRST;
+  logic ifW, ifRST;
   word_t ifJALjump_addr, ifinstr;
 
   //INSTRUCTION DECODE
-  logic idW, idnRST;
+  logic idW, idRST;
   logic idcuDRE, idcuDWE, idMemToReg, idbrnch_ne, idbrnch_eq, idRegDst, idJALflag, idWEN,
 idLUIflag, idALUsrc, idSHIFTflag, idEXTop;
   aluop_t idALUOP;
@@ -29,7 +29,7 @@ idLUIflag, idALUsrc, idSHIFTflag, idEXTop;
   logic [4:0] idrsel1, idrsel2;
 
   //EXECUTE
-  logic exW, exnRST;
+  logic exW, exRST;
   logic excuDRE, excuDWE, exMemToReg, exbrnch_ne, exbrnch_eq, exbrnch_addr, exJALflag,
 exWEN, exSHIFTflag, exEXTop, exALUsrc, exZero;
   aluop_t exALUOP;
@@ -38,7 +38,7 @@ exWEN, exSHIFTflag, exEXTop, exALUsrc, exZero;
   logic [5:0] exSHIFTval;
 
   //MEMORY
-  logic memW, memnRST;
+  logic memW, memRST;
   logic memcuDRE, memcuDWE, memMemToReg, membrnch_ne, membrnch_eq, memWEN, membrnch_addr,
 memJALflag, memZero;
   logic [4:0] memwsel;
@@ -51,26 +51,26 @@ memJALflag, memZero;
 
   // register file ports
   modport ifid (
-    input   ifW, ifnRST, ifJALjump_addr, ifinstr,
+    input   ifW, ifRST, ifJALjump_addr, ifinstr,
     output  idinstr, idJALjump_addr, idrsel1, idrsel2
   );
 
   modport idex(
-    input   idW, idnRST, idcuDRE, idcuDWE, idMemToReg, idbrnch_ne, idbrnch_eq, idRegDst, idJALflag, idWEN,
+    input   idW, idRST, idcuDRE, idcuDWE, idMemToReg, idbrnch_ne, idbrnch_eq, idRegDst, idJALflag, idWEN,
 idLUIflag, idALUsrc, idSHIFTflag, idEXTop, idALUOP, idrdat1, idrdat2, idinstr,
     output  excuDRE, excuDWE, exMemToReg, exbrnch_ne, exbrnch_eq, exbrnch_addr, exJALflag,
 exWEN, exSHIFTflag, exALUOP, exEXTop, exALUsrc, exrdat1, exrdat2, exrd, exrt, exSHIFTval
   );
 
   modport exmem(
-    input   exW, exnRST, excuDRE, excuDWE, exMemToReg, exbrnch_ne, exbrnch_eq, exWEN, exbrnch_addr,
+    input   exW, exRST, excuDRE, excuDWE, exMemToReg, exbrnch_ne, exbrnch_eq, exWEN, exbrnch_addr,
 exJALflag, exwsel, exZero, exOutput_Port, exrdat2,
     output  memcuDRE, memcuDWE, memMemToReg, membrnch_ne, membrnch_eq, memWEN, membrnch_addr,
 memJALflag, memwsel, memZero, memOutput_Port, memrdat2
   );
 
   modport memwb(
-    input   memW, memnRST, memMemToReg, memwsel, memWEN, memOutput_Port, memdmemload,
+    input   memW, memRST, memMemToReg, memwsel, memWEN, memOutput_Port, memdmemload,
     output  wbMemToReg, wbwsel, wbWEN, wbOutput_Port, wbdmemload
   );
 endinterface
