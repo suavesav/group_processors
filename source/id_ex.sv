@@ -6,10 +6,11 @@ module ifex
     input logic CLK, nRST,
     pipeline_register_if.idex idexif
   );
-
-  if(!nRST)
+  always_ff @(posedge CLK, negedge nRST)
   begin
+    if(!nRST)
+    begin
 
+    end
   end
-
 endmodule // DECODE_EXECUTE

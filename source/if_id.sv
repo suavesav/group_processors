@@ -7,9 +7,13 @@ module ifid
     pipeline_register_if.ifid ifidif
   );
 
-  if(!nRST)
+  always_ff @(posedge CLK, negedge nRST)
   begin
-
+    if (!nRST)
+    begin
+    end
+    else if(ifidif.ifW)
+    begin
+    end
   end
-
 endmodule // FETCH_DECODE

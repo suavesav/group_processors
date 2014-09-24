@@ -7,9 +7,12 @@ module exmem
     pipeline_register_if.exmem exmemif
   );
 
-  if(!nRST)
+  always_ff @(posedge CLK, negedge nRST)
   begin
+    if(!nRST)
+    begin
 
+    end
   end
 
 endmodule // EXECUTE_MEMORY
