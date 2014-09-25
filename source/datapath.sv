@@ -47,49 +47,51 @@ module datapath (
 
    assign dpif.imemREN = 1;
    assign dpif.imemaddr = iaddr;
-   assign dpif.halt = ppif.memcuHALT;
+   assign dpif.halt = ppif.memcuHALT; //CHANGE
    assign dpif.datmoic = datomic;
    assign Negative = aluif.Negative;
    assign Overflow = aluif.Overflow;
 
    
    //Fetch Cycle
-   assign ppif.ifinstr = dpif.imemload;
+   assign ifif.ifinstr = dpif.imemload;
    assign temp_addr = iaddr + 4;
-   assign ppif.ifJALjump_addr = {temp_addr[31:28],dpif.imemload[25:0],2'b00};
+   assign ifif.ifJALjump_addr = {temp_addr[31:28],dpif.imemload[25:0],2'b00};
 
-   
+
    //Decode Cycle
+     
    //FROM IF/ID REG
-   assign cuif.instr = ppif.idinstr;                
+   assign cuif.instr = ifif.idinstr;                
 
-   assign rfif.rsel1 = ppif.idrsel1;          
-   assign rfif.rsel2 = ppif.idrsel2;          
-   assign rfif.wdat = ppif.wbMemToReg ? ppif.wbdmemload : ppif.wbOutput_Port;
-   assign rfif.wsel = ppif.wbwsel;
-   assign rfif.WEN = ppif.wbWEN;                 
+   assign rfif.rsel1 = ifif.idrsel1;          
+   assign rfif.rsel2 = ifif.idrsel2;          
+   assign rfif.wdat = memif.wbMemToReg ? memif.wbdmemload : memif.wbOutput_Port;
+   assign rfif.wsel = memif.wbwsel;
+   assign rfif.WEN = memif.wbWEN;  //CHECK AT END               
    
    //TO ID/EX REG
-   assign ppif.idWEN = cuif.WEN;
-   assign ppif.idbrnch_eq = cuif.brnch_eq;
-   assign ppif.idbrnch_ne = cuif.brnch_ne;
-   assign ppif.idjmp = cuif.jmp;
-   assign ppif.idJR = cuif.JR;
-   assign ppif.idJALflag = cuif.JALflag;
-   assign ppif.idcuDRE = cuif.cuDRE;
-   assign ppif.idcuDWE = cuif.cuDWE;
-   assign ppif.idcuHALT = cuif.cuHALT;
-   assign ppif.idALUOP = cuif.ALUOP;
-   assign ppif.idALUsrc = cuif.ALUsrc;
-   assign ppif.idEXTop = cuif.EXTop;
-   assign ppif.idRegDst = cuif.RegDst;
-   assign ppif.idMemToReg = cuif.MemToReg;
-   assign ppif.idSHIFTflag = cuif.SHIFTflag;
-   assign ppif.idLUIflag = cuif.LUIflag;
+   assign idif.idWEN = cuif.WEN;
+   assign idif.idbrnch_eq = cuif.brnch_eq;
+   assign idif.idbrnch_ne = cuif.brnch_ne;
+   assign idif.idjmp = cuif.jmp;
+   assign idif.idJR = cuif.JR;
+   assign idif.idJALflag = cuif.JALflag;
+   assign idif.idcuDRE = cuif.cuDRE;
+   assign idif.idcuDWE = cuif.cuDWE;
+   assign idif.idcuHALT = cuif.cuHALT;
+   assign idif.idALUOP = cuif.ALUOP;
+   assign idif.idALUsrc = cuif.ALUsrc;
+   assign idif.idEXTop = cuif.EXTop;
+   assign idif.idRegDst = cuif.RegDst;
+   assign idif.idMemToReg = cuif.MemToReg;
+   assign idif.idSHIFTflag = cuif.SHIFTflag;
+   assign idif.idLUIflag = cuif.LUIflag;
 
-   assign ppif.idrdat1 = rfif.rdat1;
-   assign ppif.idrdat2 = rfif.rdat2;
+   assign idif.idrdat1 = rfif.rdat1;
+   assign idif.idrdat2 = rfif.rdat2;
 
+   assign idif.idinstr = ifif.idinstr;
    
    //Execute Cycle
    //FROM ID/EX REG
