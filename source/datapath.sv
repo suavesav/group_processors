@@ -5,6 +5,7 @@
 
 
 `include "datapath_cache_if.vh"
+`include "pipeline_register_if.vh"
 
 `include "cpu_types_pkg.vh"
 
@@ -20,7 +21,11 @@ module datapath (
    register_file_if rfif();
    ALU_if aluif();
    control_unit_if cuif();
-   pipeline_register_if ppif(); 
+   //pipeline_register_if ppif(); 
+   if_id_if ifif();
+   id_ex_if idif();
+   ex_mem_if exif();
+   mem_wb_if memif();
    
 
    //DEFINITIONS
@@ -32,10 +37,10 @@ module datapath (
    register_file RF(CLK, nRST, rfif);
    ALU ALU(aluif);
    control_unit CU(cuif);
-   if_id IF(CLK, nRST, ppif); 
-   id_ex ID(CLK, nRST, ppif); 
-   ex_mem EX(CLK, nRST, ppif); 
-   mem_wb MEM(CLK, nRST, ppif);
+   if_id IF(CLK, nRST, ifif); 
+   id_ex ID(CLK, nRST, idif); 
+   ex_mem EX(CLK, nRST, exif); 
+   mem_wb MEM(CLK, nRST, memif);
  
 
    //TIE MODULES
@@ -138,7 +143,7 @@ module datapath (
    //Write Back Stage
    //FROM MEM/WB REG
 
-   always_comb //NEEDS TO HANDLE LUI
+   always_comb 
      begin
 	if(ppif.wbLUIflag)
 	  rfif.wdat = ppif.wbLUIdata;
@@ -151,6 +156,9 @@ module datapath (
    assign rfif.WEN = ppif.wbWEN;
    assign rfif.wsel = ppif.wbwsel;
 
+   assign ppif.memW = 1;
+   assign ppif.memRST = 0;
+   
    always_comb
      begin
 	if(ppif.memcuDRE == 1 || ppif.memcuDWE == 1)
@@ -175,11 +183,9 @@ module datapath (
 	     ppif.ifW = 1;
 	     ppif.idW = 1;
 	     ppif.exW = 1;
-	     ppif.memW = 1;
 	     ppif.ifRST = 0;
 	     ppif.idRST = 0;
 	     ppif.exRST = 0;
-	     ppif.memRST = 0;
 	  end // else: !if(dpif.ihit)
      end
 
