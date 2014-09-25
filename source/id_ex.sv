@@ -4,7 +4,8 @@ module idex
   import cpu_types_pkg::*;
    (
     input logic CLK, nRST,
-    pipeline_register_if.idex idexif
+    id_ex_if.idex idexif
+    //pipeline_register_if.idex idexif
     );
    always_ff @(posedge CLK, negedge nRST)
      begin
