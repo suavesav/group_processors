@@ -7,7 +7,7 @@
   Pipeline Registers interface
 */
 `ifndef PIPELINE_REGISTER_IF_VH
-`define PIPELINE_REGISTER__IF_VH
+`define PIPELINE_REGISTER_IF_VH
 
 // all types
 `include "cpu_types_pkg.vh"
@@ -25,7 +25,7 @@ interface pipeline_register_if;
   logic idcuDRE, idcuDWE, idcuHALT, idMemToReg, idbrnch_ne, idbrnch_eq, idRegDst, idjmp, idJR, idJALflag, idWEN,
 idLUIflag, idALUsrc, idSHIFTflag, idEXTop;
   aluop_t idALUOP;
-  word_t idrdat1, idrdat2, idinstr;
+  word_t idrdat1, idrdat2, idinstr, idJALjump_addr;
   logic [4:0] idrsel1, idrsel2;
 
   //EXECUTE
@@ -44,8 +44,8 @@ exWEN, exLUIflag, exSHIFTflag, exEXTop, exALUsrc, exZero;
   word_t memOutput_Port, memrdat2, memdmemload, meminstr;
 
   //WRITEBACK
-  output  wbMemToReg, wbWEN, wbLUIflag;
-  output [4:0] wbwsel;
+  logic  wbMemToReg, wbWEN, wbLUIflag;
+  logic [4:0] wbwsel;
   word_t wbOutput_Port, wbdmemload, wbinstr, wbLUIdata;
 
   // register file ports

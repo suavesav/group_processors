@@ -1,150 +1,197 @@
-/*
-  Eric Villasenor
-  evillase@gmail.com
+//pcWEN LOGIC
+//PC counter logic
+//WEN for registers
+//sync RST for registers
 
-  datapath contains register file, control, hazard,
-  muxes, and glue logic for processor
-*/
 
-// data path interface
 `include "datapath_cache_if.vh"
 
-// alu op, mips op, and instruction type
 `include "cpu_types_pkg.vh"
 
 module datapath (
 		 input logic CLK, nRST,
 		 datapath_cache_if.dp dpif
 		 );
-   // import types
    import cpu_types_pkg::*;
-   
-   // pc init
+
    parameter PC_INIT = 0;
 
-   //INTERFACE INSTANCES
+   //Interface instances
    register_file_if rfif();
    ALU_if aluif();
-   request_unit_if ruif();
    control_unit_if cuif();
+   pipeline_register_if ppif(); 
+   
 
    //DEFINITIONS
-   logic      pcWEN, Negative, Overflow, dpHALT, datomic = 0;
+   logic 		     pcWEN, Negative, Overflow, datomic = 0;
    word_t iaddr, addr, temp_addr;
 
    //MODPORTS
-   PC MYPC(CLK, nRST, pcWEN, addr, iaddr);
+   PC PC(CLK, nRST, pcWEN, addr, iaddr);
    register_file RF(CLK, nRST, rfif);
    ALU ALU(aluif);
    control_unit CU(cuif);
-   request_unit RU(CLK, nRST, ruif);
+   if_id IF(CLK, nRST, ppif); 
+   id_ex ID(CLK, nRST, ppif); 
+   ex_mem EX(CLK, nRST, ppif); 
+   mem_wb MEM(CLK, nRST, ppif);
+ 
 
    //TIE MODULES
-   //Control Unit input
-   assign cuif.instr = dpif.imemload;
-   //Control Unit to Requst Unit
-   assign ruif.cuDRE = cuif.cuDRE;
-   assign ruif.cuDWE = cuif.cuDWE;
-   assign ruif.cuIRE = cuif.cuIRE;
+
+   assign dpif.imemREN = 1;
+   assign dpif.imemaddr = iaddr;
+   assign dpif.halt = ppif.memcuHALT;
+   assign dpif.datmoic = datomic;
+   assign Negative = aluif.Negative;
+   assign Overflow = aluif.Overflow;
+
    
-   //Control Unit to ALU
-   assign aluif.ALUOP = cuif.ALUOP;
+   //Fetch Cycle
+   assign ppif.ifinstr = dpif.imemload;
+   assign temp_addr = iaddr + 4;
+   assign ppif.ifJALjump_addr = {temp_addr[31:28],dpif.imemload[25:0],2'b00};
 
-   //Control Unit to Reg File
-   assign rfif.WEN = cuif.WEN;
-
-   //Request Unit input
-   assign ruif.ihit = dpif.ihit;
-   assign ruif.dhit = dpif.dhit;
    
-   //Request Unit to Datapath
-   assign dpif.imemREN = ruif.iREN;
-   assign dpif.dmemREN = ruif.dREN;
-   assign dpif.dmemWEN = ruif.dWEN;
+   //Decode Cycle
+   //FROM IF/ID REG
+   assign cuif.instr = ppif.idinstr;                
 
-   //Request Unit to PC
-   assign pcWEN = ruif.pcWEN;
+   assign rfif.rsel1 = ppif.idrsel1;          
+   assign rfif.rsel2 = ppif.idrsel2;          
+   assign rfif.wdat = ppif.wbMemToReg ? ppif.wbdmemload : ppif.wbOutput_Port;
+   assign rfif.wsel = ppif.wbwsel;
+   assign rfif.WEN = ppif.wbWEN;                 
+   
+   //TO ID/EX REG
+   assign ppif.idWEN = cuif.WEN;
+   assign ppif.idbrnch_eq = cuif.brnch_eq;
+   assign ppif.idbrnch_ne = cuif.brnch_ne;
+   assign ppif.idjmp = cuif.jmp;
+   assign ppif.idJR = cuif.JR;
+   assign ppif.idJALflag = cuif.JALflag;
+   assign ppif.idcuDRE = cuif.cuDRE;
+   assign ppif.idcuDWE = cuif.cuDWE;
+   assign ppif.idcuHALT = cuif.cuHALT;
+   assign ppif.idALUOP = cuif.ALUOP;
+   assign ppif.idALUsrc = cuif.ALUsrc;
+   assign ppif.idEXTop = cuif.EXTop;
+   assign ppif.idRegDst = cuif.RegDst;
+   assign ppif.idMemToReg = cuif.MemToReg;
+   assign ppif.idSHIFTflag = cuif.SHIFTflag;
+   assign ppif.idLUIflag = cuif.LUIflag;
 
-   //ALU Input
-   assign aluif.Port_A = rfif.rdat1;
+   assign ppif.idrdat1 = rfif.rdat1;
+   assign ppif.idrdat2 = rfif.rdat2;
+
+   
+   //Execute Cycle
+   //FROM ID/EX REG
+   assign aluif.ALUOP = ppif.exALUOP;
+   assign aluif.Port_A = ppif.exrdat1;
    always_comb
      begin
-	if(cuif.SHIFTflag)
-	  aluif.Port_B = {27'd0,dpif.imemload[10:6]};
-	else if(!cuif.ALUsrc)
-	  aluif.Port_B = rfif.rdat2;
-	else if(!cuif.EXTop)
-	  aluif.Port_B = {16'd0,dpif.imemload[15:0]};
+	if(ppif.exSHIFTflag)
+	  aluif.Port_B = {27'd0,ppif.exSHIFTval};
+	else if(!ppif.exALUsrc)
+	  aluif.Port_B = ppif.exrdat2;
+	else if(!ppif.exEXTop)
+	  aluif.Port_B = {16'd0,ppif.exinstr[15:0]};
 	else
 	  begin
-	     if(dpif.imemload[15])
-	       aluif.Port_B = {16'hFFFF,dpif.imemload[15:0]};
+	     if(ppif.exinstr[15])
+	       aluif.Port_B = {16'hFFFF,ppif.exinstr[15:0]};
 	     else
-	       aluif.Port_B = {16'h0000,dpif.imemload[15:0]};
+	       aluif.Port_B = {16'h0000,ppif.exinstr[15:0]};
 	  end
      end // always_comb
    
-
-   assign Overflow = aluif.Overflow;
-   assign Negative = aluif.Negative;
-
-   //ALU to RF and Data path
-   //assign rfif.wdat = cuif.LUIflag ? {dpif.imemload[15:0],16'd0} : (cuif.JALflag ? (iaddr+4) : (cuif.MemToReg ? dpif.imemload : aluif.Output_Port));
+   assign ppif.exwsel = ppif.exJALflag ? 5'd31 : (ppif.exRegDst ? ppif.exrd : ppif.exrt);
    
+   //TO EX/MEM REG
+   //assign ppif.excuDRE = ppif.idcuDRE;
+   //assign ppif.excuDWE = ppif.idcuDWE;
+   //assign ppif.excuHALT = ppif.idcuHALT;
+   //assign ppif.exWEN = ppif.idWEN;
+      
+   assign ppif.exOutput_Port = aluif.Output_Port;
+   assign ppif.exZero = aluif.Zero;
+   assign ppif.exrdat2 = ppif.idrdat2;
+
+   //Memory Cycle
+   //FROM EX/MEM REG
+   //assign ppif.memcuHALT = ppif.excuHALT;
+   //assign ppif.memMemToReg = ppif.exMemToReg;
+   //assign ppif.memWEN = ppif.exWEN;
+   //assign ppif.memwsel = ppif.exwsel;
+   //assign ppif.memOutput_Port = ppif.exOutput_Port;
+
+   assign dpif.dmemREN = ppif.memcuDRE;
+   assign dpif.dmemWEN = ppif.memcuDWE;
+   assign dpif.dmemaddr = ppif.exOutput_Port;
+   assign dpif.dmemstore = ppif.exrdat2;
+   
+   //TO MEM/WB REG
+   assign ppif.memdmemload = dpif.dmemload;
+
+   //Write Back Stage
+   //FROM MEM/WB REG
+
+   always_comb //NEEDS TO HANDLE LUI
+     begin
+	if(ppif.wbLUIflag)
+	  rfif.wdat = ppif.wbLUIdata;
+	else if(ppif.wbMemToReg)
+	  rfif.wdat = ppif.wbdmemload;
+	else
+	  rfif.wdat = ppif.wbOutput_Port;
+     end
+
+   assign rfif.WEN = ppif.wbWEN;
+   assign rfif.wsel = ppif.wbwsel;
+
    always_comb
      begin
-	if(cuif.LUIflag)
-	  rfif.wdat = {dpif.imemload[15:0],16'd0};
-	else if(cuif.JALflag)
-	  rfif.wdat = iaddr + 4;
-	else if(cuif.MemToReg)
-	  rfif.wdat = dpif.dmemload;
+	if(ppif.memcuDRE == 1 || ppif.memcuDWE == 1)
+	  begin
+	     ppif.ifW = 0;
+	     ppif.idW = 0;
+	     ppif.exW = 0;
+	  end
+	else if(dpif.dhit)
+	  begin
+	     ppif.ifW = 1;
+	     ppif.ifRST = 1;
+	     ppif.idW = 1;
+	     ppif.exW = 1;
+	  end
+	else if(dpif.ihit)
+	  begin
+	     ppif.ifRST = 0;
+	  end
 	else
-	  rfif.wdat = aluif.Output_Port;
+	  begin
+	     ppif.ifW = 1;
+	     ppif.idW = 1;
+	     ppif.exW = 1;
+	     ppif.memW = 1;
+	     ppif.ifRST = 0;
+	     ppif.idRST = 0;
+	     ppif.exRST = 0;
+	     ppif.memRST = 0;
+	  end // else: !if(dpif.ihit)
+     end
+
+   always_comb
+     begin
+	if(ppif.memcuDRE == 0 || ppif.memcuDWE == 0)
+	  pcWEN = dpif.ihit;
+	else
+	  pcWEN = dpif.dhit;
      end
    
-   assign dpif.dmemaddr = aluif.Output_Port;
-   assign dpif.dmemstore = rfif.rdat2;
-   assign dpif.imemaddr = iaddr;
 
-   //Register File
-   assign rfif.rsel1 = dpif.imemload[25:21];
-   assign rfif.rsel2 = dpif.imemload[20:16];
-   assign rfif.wsel = cuif.JALflag ? 5'd31 : (cuif.RegDst ? dpif.imemload[15:11] : dpif.imemload[20:16]);
 
-   //assign dpif.halt = cuif.cuHALT;
    
-   always_ff @ (posedge CLK, negedge nRST)
-     begin
-	if(!nRST)
-	  dpHALT <= 0;
-	else
-	  begin
-	     if(!dpHALT)
-  	       dpHALT <= cuif.cuHALT;
-	     else
-	       dpHALT <= 1;
-	  end
-     end // always_ff @
-
-   assign dpif.halt = dpHALT;
-   assign dpif.datomic = datomic;
-
-   //PC MUX
-
-   assign temp_addr = iaddr + 4;
-   
-   always_comb
-     begin
-	if(cuif.JR)
-	  addr = aluif.Port_A;
-	else if(cuif.jmp || cuif.JALflag)
-	  addr = {temp_addr[31:28],dpif.imemload[25:0],2'b00};
-	else if((cuif.brnch_eq && aluif.Zero) || (cuif.brnch_ne && !aluif.Zero))
-	  addr = (iaddr + 4) + {14'd0,dpif.imemload[15:0],2'b00};
-	else
-	  addr = iaddr + 4;
-     end // always_comb
-   
-   
-endmodule
+endmodule // datapath
