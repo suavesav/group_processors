@@ -1,4 +1,4 @@
-`include "pipeline_register_if.vh"
+`include "if_id_if.vh"
 
 module ifid
   import cpu_types_pkg::*;

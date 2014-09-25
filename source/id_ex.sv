@@ -1,4 +1,4 @@
-`include "pipeline_register_if.vh"
+`include "id_ex_if.vh"
 
 module idex
   import cpu_types_pkg::*;
@@ -24,7 +24,7 @@ module idex
 	     idexif.exWEN <= 0;
 	     idexif.exALUsrc <= 0;
 	     idexif.exSHIFTflag <= 0;
-	     idexif.exALUOP <= '0;
+	     idexif.exALUOP <= ALU_SLL;
 	     idexif.exEXTop <= 0;
 	     idexif.exrdat1 <= '0;
 	     idexif.exrdat2 <= '0;
@@ -32,6 +32,7 @@ module idex
 	     idexif.exrt <= '0;
 	     idexif.exSHIFTval <= '0;
 	     idexif.exinstr <= '0;
+	     idexif.exLUIflag <= 0;
 	  end
 	else if(idexif.idW)
 	  begin
@@ -50,7 +51,7 @@ module idex
 		  idexif.exWEN <= 0;
 		  idexif.exALUsrc <= 0;
 		  idexif.exSHIFTflag <= 0;
-		  idexif.exALUOP <= '0;
+		  idexif.exALUOP <= ALU_SLL;
 		  idexif.exEXTop <= 0;
 		  idexif.exrdat1 <= '0;
 		  idexif.exrdat2 <= '0;
@@ -58,6 +59,7 @@ module idex
 		  idexif.exrt <= '0;
 		  idexif.exSHIFTval <= '0;
 		  idexif.exinstr <= '0;
+		  idexif.exLUIflag <= 0;
 	       end // if (idexif.idRST)
 	     else
 	       begin
@@ -82,6 +84,7 @@ module idex
 		  idexif.exrt <= idexif.idinstr[20:16];
 		  idexif.exSHIFTval <= idexif.idinstr[10:6];
 		  idexif.exinstr <= idexif.idinstr[15:0];
+		  idexif.exLUIflag <= idexif.idLUIflag;
 	       end  
 	  end
      end

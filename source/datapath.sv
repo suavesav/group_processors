@@ -5,7 +5,10 @@
 
 
 `include "datapath_cache_if.vh"
-`include "pipeline_register_if.vh"
+`include "if_id_if.vh"
+`include "id_ex_if.vh"
+`include "ex_mem_if.vh"
+`include "mem_wb_if.vh"
 
 `include "cpu_types_pkg.vh"
 
@@ -21,7 +24,6 @@ module datapath (
    register_file_if rfif();
    ALU_if aluif();
    control_unit_if cuif();
-   //pipeline_register_if ppif(); 
    if_id_if ifif();
    id_ex_if idif();
    ex_mem_if exif();
@@ -37,18 +39,18 @@ module datapath (
    register_file RF(CLK, nRST, rfif);
    ALU ALU(aluif);
    control_unit CU(cuif);
-   if_id IF(CLK, nRST, ifif); 
-   id_ex ID(CLK, nRST, idif); 
-   ex_mem EX(CLK, nRST, exif); 
-   mem_wb MEM(CLK, nRST, memif);
+   ifid IF(CLK, nRST, ifif); 
+   idex ID(CLK, nRST, idif); 
+   exmem EX(CLK, nRST, exif); 
+   memwb MEM(CLK, nRST, memif);
  
 
    //TIE MODULES
 
    assign dpif.imemREN = 1;
    assign dpif.imemaddr = iaddr;
-   assign dpif.halt = ppif.memcuHALT; //CHANGE
-   assign dpif.datmoic = datomic;
+   assign dpif.halt = memif.wbcuHALT;
+   assign dpif.datomic = datomic;
    assign Negative = aluif.Negative;
    assign Overflow = aluif.Overflow;
 
@@ -66,9 +68,9 @@ module datapath (
 
    assign rfif.rsel1 = ifif.idrsel1;          
    assign rfif.rsel2 = ifif.idrsel2;          
-   assign rfif.wdat = memif.wbMemToReg ? memif.wbdmemload : memif.wbOutput_Port;
+   //assign rfif.wdat = memif.wbMemToReg ? memif.wbdmemload : memif.wbOutput_Port;
    assign rfif.wsel = memif.wbwsel;
-   assign rfif.WEN = memif.wbWEN;  //CHECK AT END               
+   assign rfif.WEN = memif.wbWEN;              
    
    //TO ID/EX REG
    assign idif.idWEN = cuif.WEN;
@@ -95,109 +97,120 @@ module datapath (
    
    //Execute Cycle
    //FROM ID/EX REG
-   assign aluif.ALUOP = ppif.exALUOP;
-   assign aluif.Port_A = ppif.exrdat1;
+   assign aluif.ALUOP = idif.exALUOP;
+   assign aluif.Port_A = idif.exrdat1;
    always_comb
      begin
-	if(ppif.exSHIFTflag)
-	  aluif.Port_B = {27'd0,ppif.exSHIFTval};
-	else if(!ppif.exALUsrc)
-	  aluif.Port_B = ppif.exrdat2;
-	else if(!ppif.exEXTop)
-	  aluif.Port_B = {16'd0,ppif.exinstr[15:0]};
+	if(idif.exSHIFTflag)
+	  aluif.Port_B = {27'd0,idif.exSHIFTval};
+	else if(!idif.exALUsrc)
+	  aluif.Port_B = idif.exrdat2;
+	else if(!idif.exEXTop)
+	  aluif.Port_B = {16'd0,idif.exinstr[15:0]};
 	else
 	  begin
-	     if(ppif.exinstr[15])
-	       aluif.Port_B = {16'hFFFF,ppif.exinstr[15:0]};
+	     if(idif.exinstr[15])
+	       aluif.Port_B = {16'hFFFF,idif.exinstr[15:0]};
 	     else
-	       aluif.Port_B = {16'h0000,ppif.exinstr[15:0]};
+	       aluif.Port_B = {16'h0000,idif.exinstr[15:0]};
 	  end
      end // always_comb
    
-   assign ppif.exwsel = ppif.exJALflag ? 5'd31 : (ppif.exRegDst ? ppif.exrd : ppif.exrt);
+   assign exif.exwsel = idif.exJALflag ? 5'd31 : (idif.exRegDst ? idif.exrd : idif.exrt);
    
    //TO EX/MEM REG
-   //assign ppif.excuDRE = ppif.idcuDRE;
-   //assign ppif.excuDWE = ppif.idcuDWE;
-   //assign ppif.excuHALT = ppif.idcuHALT;
-   //assign ppif.exWEN = ppif.idWEN;
-      
-   assign ppif.exOutput_Port = aluif.Output_Port;
-   assign ppif.exZero = aluif.Zero;
-   assign ppif.exrdat2 = ppif.idrdat2;
+   assign exif.excuDRE = idif.excuDRE;
+   assign exif.excuDWE = idif.excuDWE;
+   assign exif.excuHALT = idif.excuHALT;
+   assign exif.exMemToReg = idif.exMemToReg;
+   assign exif.exWEN = idif.idWEN;
+   assign exif.exLUIflag = idif.exLUIflag;
+   assign exif.exinstr = idif.exinstr;
+   
+   assign exif.exOutput_Port = aluif.Output_Port;
+   assign exif.exZero = aluif.Zero;
+   assign exif.exrdat2 = idif.exrdat2;
 
    //Memory Cycle
    //FROM EX/MEM REG
-   //assign ppif.memcuHALT = ppif.excuHALT;
-   //assign ppif.memMemToReg = ppif.exMemToReg;
-   //assign ppif.memWEN = ppif.exWEN;
-   //assign ppif.memwsel = ppif.exwsel;
-   //assign ppif.memOutput_Port = ppif.exOutput_Port;
-
-   assign dpif.dmemREN = ppif.memcuDRE;
-   assign dpif.dmemWEN = ppif.memcuDWE;
-   assign dpif.dmemaddr = ppif.exOutput_Port;
-   assign dpif.dmemstore = ppif.exrdat2;
+   assign memif.memcuHALT = exif.memcuHALT;
+   assign memif.memMemToReg = exif.memMemToReg;
+   assign memif.memWEN = exif.memWEN;
+   assign memif.memwsel = exif.memwsel;
+   assign memif.memOutput_Port = exif.memOutput_Port;
+   assign memif.memLUIflag = exif.memLUIflag;
+   assign memif.meminstr = exif.meminstr;
+   
+   assign dpif.dmemREN = exif.memcuDRE;
+   assign dpif.dmemWEN = exif.memcuDWE;
+   assign dpif.dmemaddr = exif.memOutput_Port;
+   assign dpif.dmemstore = exif.memrdat2;
    
    //TO MEM/WB REG
-   assign ppif.memdmemload = dpif.dmemload;
+   assign memif.memdmemload = dpif.dmemload;
 
    //Write Back Stage
    //FROM MEM/WB REG
-
+   
    always_comb 
      begin
-	if(ppif.wbLUIflag)
-	  rfif.wdat = ppif.wbLUIdata;
-	else if(ppif.wbMemToReg)
-	  rfif.wdat = ppif.wbdmemload;
+	if(memif.wbLUIflag)
+	  rfif.wdat = memif.wbLUIdata;
+	else if(memif.wbMemToReg)
+	  rfif.wdat = memif.wbdmemload;
 	else
-	  rfif.wdat = ppif.wbOutput_Port;
+	  rfif.wdat = memif.wbOutput_Port;
      end
 
-   assign rfif.WEN = ppif.wbWEN;
-   assign rfif.wsel = ppif.wbwsel;
+   //assign rfif.WEN = memif.wbWEN;
+   //assign rfif.wsel = memif.wbwsel;
 
-   assign ppif.memW = 1;
-   assign ppif.memRST = 0;
+   assign memif.memW = 1;
+   assign memif.memRST = 0;
    
    always_comb
      begin
-	if(ppif.memcuDRE == 1 || ppif.memcuDWE == 1)
+	if((exif.memcuDRE == 1 || exif.memcuDWE == 1) && !dpif.dhit)
 	  begin
-	     ppif.ifW = 0;
-	     ppif.idW = 0;
-	     ppif.exW = 0;
+	     ifif.ifW = 0;
+	     idif.idW = 0;
+	     exif.exW = 0;
 	  end
 	else if(dpif.dhit)
 	  begin
-	     ppif.ifW = 1;
-	     ppif.ifRST = 1;
-	     ppif.idW = 1;
-	     ppif.exW = 1;
+	     ifif.ifW = 1;
+	     ifif.ifRST = 1;
+	     idif.idW = 1;
+	     exif.exW = 1;
 	  end
 	else if(dpif.ihit)
 	  begin
-	     ppif.ifRST = 0;
+	     ifif.ifRST = 0;
 	  end
 	else
 	  begin
-	     ppif.ifW = 1;
-	     ppif.idW = 1;
-	     ppif.exW = 1;
-	     ppif.ifRST = 0;
-	     ppif.idRST = 0;
-	     ppif.exRST = 0;
+	     ifif.ifW = 1;
+	     idif.idW = 1;
+	     exif.exW = 1;
+	     ifif.ifRST = 0;
+	     idif.idRST = 0;
+	     exif.exRST = 0;
 	  end // else: !if(dpif.ihit)
      end
 
    always_comb
      begin
-	if(ppif.memcuDRE == 0 || ppif.memcuDWE == 0)
+	if(exif.memcuDRE == 0 || exif.memcuDWE == 0)
 	  pcWEN = dpif.ihit;
+	else if(memif.wbcuHALT)
+	  pcWEN = 0;
 	else
 	  pcWEN = dpif.dhit;
      end
+   
+   
+
+   assign addr = iaddr + 4;
    
 
 

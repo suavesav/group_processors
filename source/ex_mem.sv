@@ -1,10 +1,10 @@
-`include "pipeline_register_if.vh"
+`include "ex_mem_if.vh"
 
 module exmem
   import cpu_types_pkg::*;
    (
     input logic CLK, nRST,
-    pipeline_register_if.exmem exmemif
+    ex_mem_if.exmem exmemif
     );
    
    always_ff @(posedge CLK, negedge nRST)
@@ -20,18 +20,20 @@ module exmem
 	     exmemif.memOutput_Port <= '0;
 	     exmemif.memrdat2 <= '0;
 	     exmemif.meminstr <= '0;
+	     exmemif.memLUIflag <= 0;
 	  end
 	else if(exmemif.exW)
 	  begin
 	     exmemif.memcuDRE <= exmemif.excuDRE;
 	     exmemif.memcuDWE <= exmemif.excuDWE;
-	     exmemif.memcuHALT <= exemif.excuHALT;
+	     exmemif.memcuHALT <= exmemif.excuHALT;
 	     exmemif.memMemToReg <= exmemif.exMemToReg;
 	     exmemif.memWEN <= exmemif.exWEN;
 	     exmemif.memwsel <= exmemif.exwsel;
 	     exmemif.memOutput_Port <= exmemif.exOutput_Port;
 	     exmemif.memrdat2 <= exmemif.exrdat2;
-	     exemif.meminstr <= exemif.exinstr;
+	     exmemif.meminstr <= exmemif.exinstr;
+	     exmemif.memLUIflag <= exmemif.exLUIflag;
 	     if(exmemif.exRST)
 	       begin
 		  exmemif.memcuDRE <= 0;
@@ -43,6 +45,7 @@ module exmem
 		  exmemif.memOutput_Port <= '0;
 		  exmemif.memrdat2 <= '0;
 		  exmemif.meminstr <= '0;
+		  exmemif.memLUIflag <= 0;
 	       end
 	  end // if (exmemif.exW)
      end // always_ff @

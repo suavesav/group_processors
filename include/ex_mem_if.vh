@@ -26,7 +26,7 @@ exWEN, exLUIflag, exZero;
 
   //MEMORY
   logic memW, memRST;
-   logic memcuDRE, memcuDWE, memcuHALT, memMemToReg, memWEN;
+   logic memcuDRE, memcuDWE, memcuHALT, memMemToReg, memWEN, memLUIflag;
    logic [4:0] memwsel;
   word_t memOutput_Port, memrdat2, memdmemload, meminstr;
 
@@ -35,7 +35,7 @@ exWEN, exLUIflag, exZero;
 
   modport exmem(
     input   exW, exRST, excuDRE, excuDWE, excuHALT, exMemToReg, exWEN, exLUIflag, exwsel, exZero, exOutput_Port, exrdat2, exinstr,
-    output  memcuDRE, memcuDWE, memcuHALT, memMemToReg, memWEN, memwsel, memOutput_Port, memrdat2, meminstr
+    output  memcuDRE, memcuDWE, memcuHALT, memMemToReg, memWEN, memLUIflag, memwsel, memOutput_Port, memrdat2, meminstr
   );
 endinterface
 

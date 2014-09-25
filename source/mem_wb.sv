@@ -1,10 +1,10 @@
-`include "pipeline_register_if.vh"
+`include "mem_wb_if.vh"
 
 module memwb
   import cpu_types_pkg::*;
   (
     input logic CLK, nRST,
-    pipeline_register_if.memwb memwbif
+    mem_wb_if.memwb memwbif
   );
 
    always_ff @(posedge CLK, negedge nRST)
@@ -18,16 +18,10 @@ module memwb
 	     memwbif.wbOutput_Port <= '0;
 	     memwbif.wbdmemload <= '0;
 	     memwbif.wbLUIdata <= '0;
+	     memwbif.wbcuHALT <= '0;
 	  end
 	else if(memwbif.memW)
 	  begin
-	     memwbif.wbMemToReg <= memwbif.memMemToReg;
-	     memwbif.wbwsel <= memwbif.memwsel;
-	     memwbif.wbLUIflag <= memwbif.memLUIflag;
-	     memwbif.wbWEN <= memwbif.memWEN;
-	     memwbif.wbOutput_Port <= memwbif.memOutput_Port;
-	     memwbif.wbdmemload <= memwbif.memdmemload;
-	     memwbif.wbLUIdata <= {memwbif.meminstr[15:0],16'd0};
 	     if(memwbif.memRST)
 	       begin
 		  memwbif.wbMemToReg <= 0;
@@ -37,6 +31,18 @@ module memwb
 		  memwbif.wbOutput_Port <= '0;
 		  memwbif.wbdmemload <= '0;
 		  memwbif.wbLUIdata <= 0;
+		  memwbif.wbcuHALT <= '0;
+	       end // if (memwbif.memRST)
+	     else
+	       begin
+		  memwbif.wbMemToReg <= memwbif.memMemToReg;
+		  memwbif.wbwsel <= memwbif.memwsel;
+		  memwbif.wbLUIflag <= memwbif.memLUIflag;
+		  memwbif.wbWEN <= memwbif.memWEN;
+		  memwbif.wbOutput_Port <= memwbif.memOutput_Port;
+		  memwbif.wbdmemload <= memwbif.memdmemload;
+		  memwbif.wbLUIdata <= {memwbif.meminstr[15:0],16'd0};
+		  memwbif.wbcuHALT <= memwbif.memcuHALT;
 	       end
 	  end
   end

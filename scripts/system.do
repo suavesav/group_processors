@@ -3,25 +3,28 @@ quietly WaveActivateNextPane {} 0
 add wave -noupdate /system_tb/CLK
 add wave -noupdate /system_tb/nRST
 add wave -noupdate -divider System
-add wave -noupdate /system_tb/syif/tbCTRL
-add wave -noupdate /system_tb/syif/halt
-add wave -noupdate /system_tb/syif/WEN
-add wave -noupdate /system_tb/syif/REN
-add wave -noupdate /system_tb/syif/addr
-add wave -noupdate /system_tb/syif/store
-add wave -noupdate /system_tb/syif/load
-add wave -noupdate -divider DataPath
-add wave -noupdate /system_tb/DUT/CPU/DP/dpif/halt
-add wave -noupdate /system_tb/DUT/CPU/DP/dpif/ihit
-add wave -noupdate /system_tb/DUT/CPU/DP/dpif/imemREN
-add wave -noupdate /system_tb/DUT/CPU/DP/dpif/imemload
-add wave -noupdate /system_tb/DUT/CPU/DP/dpif/imemaddr
-add wave -noupdate /system_tb/DUT/CPU/DP/dpif/dhit
-add wave -noupdate /system_tb/DUT/CPU/DP/dpif/dmemREN
-add wave -noupdate /system_tb/DUT/CPU/DP/dpif/dmemWEN
-add wave -noupdate /system_tb/DUT/CPU/DP/dpif/dmemload
-add wave -noupdate /system_tb/DUT/CPU/DP/dpif/dmemstore
-add wave -noupdate /system_tb/DUT/CPU/DP/dpif/dmemaddr
+add wave -noupdate /system_tb/DUT/syif/tbCTRL
+add wave -noupdate /system_tb/DUT/syif/halt
+add wave -noupdate /system_tb/DUT/syif/WEN
+add wave -noupdate /system_tb/DUT/syif/REN
+add wave -noupdate /system_tb/DUT/syif/addr
+add wave -noupdate /system_tb/DUT/syif/store
+add wave -noupdate /system_tb/DUT/syif/load
+add wave -noupdate -divider PC
+add wave -noupdate /system_tb/DUT/CPU/DP/PC/CLK
+add wave -noupdate /system_tb/DUT/CPU/DP/PC/nRST
+add wave -noupdate /system_tb/DUT/CPU/DP/PC/pcWEN
+add wave -noupdate /system_tb/DUT/CPU/DP/PC/addr
+add wave -noupdate /system_tb/DUT/CPU/DP/PC/iaddr
+add wave -noupdate -divider IF_ID
+add wave -noupdate /system_tb/DUT/CPU/DP/ifif/ifW
+add wave -noupdate /system_tb/DUT/CPU/DP/ifif/ifRST
+add wave -noupdate /system_tb/DUT/CPU/DP/ifif/ifJALjump_addr
+add wave -noupdate /system_tb/DUT/CPU/DP/ifif/ifinstr
+add wave -noupdate /system_tb/DUT/CPU/DP/ifif/idinstr
+add wave -noupdate /system_tb/DUT/CPU/DP/ifif/idJALjump_addr
+add wave -noupdate /system_tb/DUT/CPU/DP/ifif/idrsel1
+add wave -noupdate /system_tb/DUT/CPU/DP/ifif/idrsel2
 add wave -noupdate -divider {Reg File}
 add wave -noupdate /system_tb/DUT/CPU/DP/rfif/WEN
 add wave -noupdate /system_tb/DUT/CPU/DP/rfif/wsel
@@ -30,24 +33,6 @@ add wave -noupdate /system_tb/DUT/CPU/DP/rfif/rsel2
 add wave -noupdate /system_tb/DUT/CPU/DP/rfif/wdat
 add wave -noupdate /system_tb/DUT/CPU/DP/rfif/rdat1
 add wave -noupdate /system_tb/DUT/CPU/DP/rfif/rdat2
-add wave -noupdate -divider ALU
-add wave -noupdate /system_tb/DUT/CPU/DP/aluif/Zero
-add wave -noupdate /system_tb/DUT/CPU/DP/aluif/Negative
-add wave -noupdate /system_tb/DUT/CPU/DP/aluif/Overflow
-add wave -noupdate /system_tb/DUT/CPU/DP/aluif/Port_A
-add wave -noupdate /system_tb/DUT/CPU/DP/aluif/Port_B
-add wave -noupdate /system_tb/DUT/CPU/DP/aluif/Output_Port
-add wave -noupdate /system_tb/DUT/CPU/DP/aluif/ALUOP
-add wave -noupdate -divider {Request Unit}
-add wave -noupdate /system_tb/DUT/CPU/DP/ruif/dREN
-add wave -noupdate /system_tb/DUT/CPU/DP/ruif/dWEN
-add wave -noupdate /system_tb/DUT/CPU/DP/ruif/iREN
-add wave -noupdate /system_tb/DUT/CPU/DP/ruif/cuDRE
-add wave -noupdate /system_tb/DUT/CPU/DP/ruif/cuDWE
-add wave -noupdate /system_tb/DUT/CPU/DP/ruif/cuIRE
-add wave -noupdate /system_tb/DUT/CPU/DP/ruif/ihit
-add wave -noupdate /system_tb/DUT/CPU/DP/ruif/dhit
-add wave -noupdate /system_tb/DUT/CPU/DP/ruif/pcWEN
 add wave -noupdate -divider {Control Unit}
 add wave -noupdate /system_tb/DUT/CPU/DP/cuif/instr
 add wave -noupdate /system_tb/DUT/CPU/DP/cuif/WEN
@@ -67,11 +52,112 @@ add wave -noupdate /system_tb/DUT/CPU/DP/cuif/RegDst
 add wave -noupdate /system_tb/DUT/CPU/DP/cuif/MemToReg
 add wave -noupdate /system_tb/DUT/CPU/DP/cuif/SHIFTflag
 add wave -noupdate /system_tb/DUT/CPU/DP/cuif/LUIflag
-add wave -noupdate /system_tb/DUT/CPU/DP/dpHALT
-add wave -noupdate /system_tb/DUT/CPU/DP/MYPC/addr
-add wave -noupdate /system_tb/DUT/CPU/DP/MYPC/iaddr
+add wave -noupdate -divider ID_EX
+add wave -noupdate /system_tb/DUT/CPU/DP/idif/idW
+add wave -noupdate /system_tb/DUT/CPU/DP/idif/idRST
+add wave -noupdate /system_tb/DUT/CPU/DP/idif/idcuDRE
+add wave -noupdate /system_tb/DUT/CPU/DP/idif/idcuDWE
+add wave -noupdate /system_tb/DUT/CPU/DP/idif/idcuHALT
+add wave -noupdate /system_tb/DUT/CPU/DP/idif/idMemToReg
+add wave -noupdate /system_tb/DUT/CPU/DP/idif/idbrnch_ne
+add wave -noupdate /system_tb/DUT/CPU/DP/idif/idbrnch_eq
+add wave -noupdate /system_tb/DUT/CPU/DP/idif/idRegDst
+add wave -noupdate /system_tb/DUT/CPU/DP/idif/idjmp
+add wave -noupdate /system_tb/DUT/CPU/DP/idif/idJR
+add wave -noupdate /system_tb/DUT/CPU/DP/idif/idJALflag
+add wave -noupdate /system_tb/DUT/CPU/DP/idif/idWEN
+add wave -noupdate /system_tb/DUT/CPU/DP/idif/idLUIflag
+add wave -noupdate /system_tb/DUT/CPU/DP/idif/idALUsrc
+add wave -noupdate /system_tb/DUT/CPU/DP/idif/idSHIFTflag
+add wave -noupdate /system_tb/DUT/CPU/DP/idif/idEXTop
+add wave -noupdate /system_tb/DUT/CPU/DP/idif/idALUOP
+add wave -noupdate /system_tb/DUT/CPU/DP/idif/idrdat1
+add wave -noupdate /system_tb/DUT/CPU/DP/idif/idrdat2
+add wave -noupdate /system_tb/DUT/CPU/DP/idif/idinstr
+add wave -noupdate /system_tb/DUT/CPU/DP/idif/idJALjump_addr
+add wave -noupdate /system_tb/DUT/CPU/DP/idif/idrsel1
+add wave -noupdate /system_tb/DUT/CPU/DP/idif/idrsel2
+add wave -noupdate -divider ALU
+add wave -noupdate /system_tb/DUT/CPU/DP/aluif/Zero
+add wave -noupdate /system_tb/DUT/CPU/DP/aluif/Negative
+add wave -noupdate /system_tb/DUT/CPU/DP/aluif/Overflow
+add wave -noupdate /system_tb/DUT/CPU/DP/aluif/Port_A
+add wave -noupdate /system_tb/DUT/CPU/DP/aluif/Port_B
+add wave -noupdate /system_tb/DUT/CPU/DP/aluif/Output_Port
+add wave -noupdate /system_tb/DUT/CPU/DP/aluif/ALUOP
+add wave -noupdate -divider EX_MEM
+add wave -noupdate /system_tb/DUT/CPU/DP/exif/exW
+add wave -noupdate /system_tb/DUT/CPU/DP/exif/exRST
+add wave -noupdate /system_tb/DUT/CPU/DP/exif/excuDRE
+add wave -noupdate /system_tb/DUT/CPU/DP/exif/excuDWE
+add wave -noupdate /system_tb/DUT/CPU/DP/exif/excuHALT
+add wave -noupdate /system_tb/DUT/CPU/DP/exif/exMemToReg
+add wave -noupdate /system_tb/DUT/CPU/DP/exif/exWEN
+add wave -noupdate /system_tb/DUT/CPU/DP/exif/exLUIflag
+add wave -noupdate /system_tb/DUT/CPU/DP/exif/exZero
+add wave -noupdate /system_tb/DUT/CPU/DP/exif/exALUOP
+add wave -noupdate /system_tb/DUT/CPU/DP/exif/exrdat2
+add wave -noupdate /system_tb/DUT/CPU/DP/exif/exOutput_Port
+add wave -noupdate /system_tb/DUT/CPU/DP/exif/exinstr
+add wave -noupdate /system_tb/DUT/CPU/DP/exif/exwsel
+add wave -noupdate /system_tb/DUT/CPU/DP/exif/memW
+add wave -noupdate /system_tb/DUT/CPU/DP/exif/memRST
+add wave -noupdate /system_tb/DUT/CPU/DP/exif/memcuDRE
+add wave -noupdate /system_tb/DUT/CPU/DP/exif/memcuDWE
+add wave -noupdate /system_tb/DUT/CPU/DP/exif/memcuHALT
+add wave -noupdate /system_tb/DUT/CPU/DP/exif/memMemToReg
+add wave -noupdate /system_tb/DUT/CPU/DP/exif/memWEN
+add wave -noupdate /system_tb/DUT/CPU/DP/exif/memLUIflag
+add wave -noupdate /system_tb/DUT/CPU/DP/exif/memwsel
+add wave -noupdate /system_tb/DUT/CPU/DP/exif/memOutput_Port
+add wave -noupdate /system_tb/DUT/CPU/DP/exif/memrdat2
+add wave -noupdate /system_tb/DUT/CPU/DP/exif/memdmemload
+add wave -noupdate /system_tb/DUT/CPU/DP/exif/meminstr
+add wave -noupdate -divider RAM
+add wave -noupdate /system_tb/DUT/prif/ramREN
+add wave -noupdate /system_tb/DUT/prif/ramWEN
+add wave -noupdate /system_tb/DUT/prif/ramaddr
+add wave -noupdate /system_tb/DUT/prif/ramstore
+add wave -noupdate /system_tb/DUT/prif/ramload
+add wave -noupdate /system_tb/DUT/prif/ramstate
+add wave -noupdate /system_tb/DUT/prif/memREN
+add wave -noupdate /system_tb/DUT/prif/memWEN
+add wave -noupdate /system_tb/DUT/prif/memaddr
+add wave -noupdate /system_tb/DUT/prif/memstore
+add wave -noupdate -divider MEMWB
+add wave -noupdate /system_tb/DUT/CPU/DP/memif/memW
+add wave -noupdate /system_tb/DUT/CPU/DP/memif/memRST
+add wave -noupdate /system_tb/DUT/CPU/DP/memif/memcuHALT
+add wave -noupdate /system_tb/DUT/CPU/DP/memif/memMemToReg
+add wave -noupdate /system_tb/DUT/CPU/DP/memif/memWEN
+add wave -noupdate /system_tb/DUT/CPU/DP/memif/memLUIflag
+add wave -noupdate /system_tb/DUT/CPU/DP/memif/memwsel
+add wave -noupdate /system_tb/DUT/CPU/DP/memif/memOutput_Port
+add wave -noupdate /system_tb/DUT/CPU/DP/memif/memrdat2
+add wave -noupdate /system_tb/DUT/CPU/DP/memif/memdmemload
+add wave -noupdate /system_tb/DUT/CPU/DP/memif/meminstr
+add wave -noupdate /system_tb/DUT/CPU/DP/memif/wbMemToReg
+add wave -noupdate /system_tb/DUT/CPU/DP/memif/wbWEN
+add wave -noupdate /system_tb/DUT/CPU/DP/memif/wbLUIflag
+add wave -noupdate /system_tb/DUT/CPU/DP/memif/wbcuHALT
+add wave -noupdate /system_tb/DUT/CPU/DP/memif/wbwsel
+add wave -noupdate /system_tb/DUT/CPU/DP/memif/wbOutput_Port
+add wave -noupdate /system_tb/DUT/CPU/DP/memif/wbdmemload
+add wave -noupdate /system_tb/DUT/CPU/DP/memif/wbinstr
+add wave -noupdate /system_tb/DUT/CPU/DP/memif/wbLUIdata
+add wave -noupdate /system_tb/DUT/CPU/DP/dpif/halt
+add wave -noupdate /system_tb/DUT/CPU/DP/dpif/ihit
+add wave -noupdate /system_tb/DUT/CPU/DP/dpif/imemREN
+add wave -noupdate /system_tb/DUT/CPU/DP/dpif/imemload
+add wave -noupdate /system_tb/DUT/CPU/DP/dpif/imemaddr
+add wave -noupdate /system_tb/DUT/CPU/DP/dpif/dhit
+add wave -noupdate /system_tb/DUT/CPU/DP/dpif/dmemREN
+add wave -noupdate /system_tb/DUT/CPU/DP/dpif/dmemWEN
+add wave -noupdate /system_tb/DUT/CPU/DP/dpif/dmemload
+add wave -noupdate /system_tb/DUT/CPU/DP/dpif/dmemstore
+add wave -noupdate /system_tb/DUT/CPU/DP/dpif/dmemaddr
 TreeUpdate [SetDefaultTree]
-WaveRestoreCursors {{Cursor 1} {342527 ps} 0}
+WaveRestoreCursors {{Cursor 1} {9505052854 ps} 0}
 quietly wave cursor active 1
 configure wave -namecolwidth 150
 configure wave -valuecolwidth 100
@@ -87,4 +173,4 @@ configure wave -griddelta 40
 configure wave -timeline 0
 configure wave -timelineunits ns
 update
-WaveRestoreZoom {219216 ps} {493240 ps}
+WaveRestoreZoom {9505017050 ps} {9505546472 ps}
