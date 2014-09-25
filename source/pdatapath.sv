@@ -20,11 +20,11 @@ module datapath (
    register_file_if rfif();
    ALU_if aluif();
    control_unit_if cuif();
-   pipeline_reg_if ppif(); //CHANGE
+   pipeline_register_if ppif(); 
    
 
    //DEFINITIONS
-   logic 		     pcWEN, Negativd, Overflow, dpHALT, datomic = 0;
+   logic 		     pcWEN, Negative, Overflow, datomic = 0;
    word_t iaddr, addr, temp_addr;
 
    //MODPORTS
@@ -32,51 +32,55 @@ module datapath (
    register_file RF(CLK, nRST, rfif);
    ALU ALU(aluif);
    control_unit CU(cuif);
-   if_id_reg IF(CLK, nRST, RST, ifWEN, ppif); //CHANGE
-   id_ex_reg ID(CLK, nRST, RST, idWEN, ppif); //CHANGE
-   ex_mem_reg EX(CLK, nRST, exWEN, ppif); //CHANGE
-   mem_wb_reg MEM(CLK, nRST, memWEN, ppif); //CHANGE
+   if_id IF(CLK, nRST, ppif); //CHANGE
+   id_ex ID(CLK, nRST, ppif); //CHANGE
+   ex_mem EX(CLK, nRST, ppif); //CHANGE
+   mem_wb MEM(CLK, nRST, ppif); //CHANGE
  
 
    //TIE MODULES
-
-   //Fetch Cycle
-   assign ppif.if_instr = dpif.imemload;
 
    assign dpif.imemREN = 1;
    assign dpif.imemaddr = iaddr;
    assign dpif.halt = ppif.memcuHALT;
    assign dpif.datmoic = datomic;
+   assign Negative = aluif.Negative;
+   assign Overflow = aluif.Overflow;
+
+   
+   //Fetch Cycle
+   assign ppif.ifinstr = dpif.imemload;
+   assign temp_addr = iaddr + 4;
+   assign ppif.ifJALjump_addr = {temp_addr[31:28],dpif.imemload[25:0],2'b00};
+
    
    //Decode Cycle
    //FROM IF/ID REG
-   assign cuif.instr = ppif.ifinstr;                 //ppif
+   assign cuif.instr = ppif.idinstr;                
 
-   assign rfif.rsel1 = ppif.ifinstr[25:21];          //ppif
-   assign rfif.rsel2 = ppif.ifinstr[20:16];          //ppif
-   //assign rfif.wdat = ??
-   assign rfif.wsel = ppif.memwsel;
-   assign rfif.WEN = ppif.memWEN;                 //make sure WEN not RegWr
-
-   assign ppif.idinstr = ppif.ifinstr;
+   assign rfif.rsel1 = ppif.idrsel1;          
+   assign rfif.rsel2 = ppif.idrsel2;          
+   assign rfif.wdat = ppif.wbMemToReg ? ppif.wbdmemload : ppif.wbOutput_Port;
+   assign rfif.wsel = ppif.wbwsel;
+   assign rfif.WEN = ppif.wbWEN;                 
    
    //TO ID/EX REG
    assign ppif.idWEN = cuif.WEN;
-   //assign ppif.id_brnch_eq = cuif.brnch_eq;
-   //assign ppif.id_brnch_ne = cuif.brnch_ne;
-   //assign ppif.id_jmp = cuif.jmp;
-   //assign ppif.id_JR = cuif.JR;
-   //assign ppif.id_JALflag = cuif.JALflag;
+   assign ppif.idbrnch_eq = cuif.brnch_eq;
+   assign ppif.idbrnch_ne = cuif.brnch_ne;
+   assign ppif.idjmp = cuif.jmp;
+   assign ppif.idJR = cuif.JR;
+   assign ppif.idJALflag = cuif.JALflag;
    assign ppif.idcuDRE = cuif.cuDRE;
    assign ppif.idcuDWE = cuif.cuDWE;
-   assign ppif.idcuHALT = cuif.cuHALT
+   assign ppif.idcuHALT = cuif.cuHALT;
    assign ppif.idALUOP = cuif.ALUOP;
    assign ppif.idALUsrc = cuif.ALUsrc;
    assign ppif.idEXTop = cuif.EXTop;
    assign ppif.idRegDst = cuif.RegDst;
    assign ppif.idMemToReg = cuif.MemToReg;
    assign ppif.idSHIFTflag = cuif.SHIFTflag;
-   assign ppif.idLUIflag = cuif.LUIflag; //?
+   assign ppif.idLUIflag = cuif.LUIflag;
 
    assign ppif.idrdat1 = rfif.rdat1;
    assign ppif.idrdat2 = rfif.rdat2;

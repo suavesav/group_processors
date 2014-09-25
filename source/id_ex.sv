@@ -1,6 +1,6 @@
 `include "pipeline_register_if.vh"
 
-module ifex
+module idex
   import cpu_types_pkg::*;
   (
     input logic CLK, nRST,

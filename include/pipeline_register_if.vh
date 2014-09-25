@@ -56,9 +56,9 @@ memJALflag, memZero;
   );
 
   modport idex(
-    input   idW, idRST, idcuDRE, idcuDWE, idMemToReg, idbrnch_ne, idbrnch_eq, idRegDst, idJALflag, idWEN,
-idLUIflag, idALUsrc, idSHIFTflag, idEXTop, idALUOP, idrdat1, idrdat2, idinstr,
-    output  excuDRE, excuDWE, exMemToReg, exbrnch_ne, exbrnch_eq, exbrnch_addr, exJALflag,
+    input   idW, idRST, idcuDRE, idcuDWE, idcuHALT, idMemToReg, idbrnch_ne, idbrnch_eq, idRegDst, idjmp, idJR, 
+idJALflag, idWEN, idLUIflag, idALUsrc, idSHIFTflag, idEXTop, idALUOP, idrdat1, idrdat2, idinstr,
+    output  excuDRE, excuDWE, excuHALT, exMemToReg, exbrnch_ne, exbrnch_eq, exbrnch_addr, exJALflag,
 exWEN, exSHIFTflag, exALUOP, exEXTop, exALUsrc, exrdat1, exrdat2, exrd, exrt, exSHIFTval
   );
 
