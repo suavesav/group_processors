@@ -32,10 +32,10 @@ module datapath (
    register_file RF(CLK, nRST, rfif);
    ALU ALU(aluif);
    control_unit CU(cuif);
-   if_id IF(CLK, nRST, ppif); //CHANGE
-   id_ex ID(CLK, nRST, ppif); //CHANGE
-   ex_mem EX(CLK, nRST, ppif); //CHANGE
-   mem_wb MEM(CLK, nRST, ppif); //CHANGE
+   if_id IF(CLK, nRST, ppif); 
+   id_ex ID(CLK, nRST, ppif); 
+   ex_mem EX(CLK, nRST, ppif); 
+   mem_wb MEM(CLK, nRST, ppif);
  
 
    //TIE MODULES
@@ -88,48 +88,47 @@ module datapath (
    
    //Execute Cycle
    //FROM ID/EX REG
-   assign aluif.ALUOP = ppif.id_ALUOP;
-   assign aluif.Port_A = ppif.idrdat1;
+   assign aluif.ALUOP = ppif.exALUOP;
+   assign aluif.Port_A = ppif.exrdat1;
    always_comb
      begin
-	if(ppif.idSHIFTflag)
-	  aluif.Port_B = {27'd0,ppif.idinstr[10:6]};
-	else if(!ppif.idALUsrc)
-	  aluif.Port_B = ppif.idrdat2;
-	else if(!ppif.idEXTop)
-	  aluif.Port_B = {16'd0,ppif.idinstr[15:0]};
+	if(ppif.exSHIFTflag)
+	  aluif.Port_B = {27'd0,ppif.exSHIFTval};
+	else if(!ppif.exALUsrc)
+	  aluif.Port_B = ppif.exrdat2;
+	else if(!ppif.exEXTop)
+	  aluif.Port_B = {16'd0,ppif.exinstr[15:0]};
 	else
 	  begin
-	     if(ppif.idinstr[15])
-	       aluif.Port_B = {16'hFFFF,ppif.idinstr[15:0]};
+	     if(ppif.exinstr[15])
+	       aluif.Port_B = {16'hFFFF,ppif.exinstr[15:0]};
 	     else
-	       aluif.Port_B = {16'h0000,ppif.idinstr[15:0]};
+	       aluif.Port_B = {16'h0000,ppif.exinstr[15:0]};
 	  end
      end // always_comb
    
-   assign ppif.exwsel = ppif.idJALflag ? 5'd31 : (ppif.idRegDst ? ppif.idinstr[15:11] : ppif.idinstr[20:16]);
+   assign ppif.exwsel = ppif.exJALflag ? 5'd31 : (ppif.exRegDst ? ppif.exrd : ppif.exrt);
    
    //TO EX/MEM REG
-   assign ppif.excuDRE = ppif.idcuDRE;
-   assign ppif.excuDWE = ppif.idcuDWE;
-   assign ppif.excuHALT = ppif.idcuHALT;
-   assign ppif.exWEN = ppif.idWEN;
-   assign ppif.exRegWr = ppif.idRegWr;
-   
+   //assign ppif.excuDRE = ppif.idcuDRE;
+   //assign ppif.excuDWE = ppif.idcuDWE;
+   //assign ppif.excuHALT = ppif.idcuHALT;
+   //assign ppif.exWEN = ppif.idWEN;
+      
    assign ppif.exOutput_Port = aluif.Output_Port;
    assign ppif.exZero = aluif.Zero;
    assign ppif.exrdat2 = ppif.idrdat2;
 
    //Memory Cycle
    //FROM EX/MEM REG
-   assign ppif.memcuHALT = ppif.excuHALT;
-   assign ppif.memMemToReg = ppif.exMemToReg;
-   assign ppif.memWEN = ppif.exWEN;
-   assign ppif.memwsel = ppif.exwsel;
-   assign ppif.memOutput_Port = ppif.exOutput_Port;
+   //assign ppif.memcuHALT = ppif.excuHALT;
+   //assign ppif.memMemToReg = ppif.exMemToReg;
+   //assign ppif.memWEN = ppif.exWEN;
+   //assign ppif.memwsel = ppif.exwsel;
+   //assign ppif.memOutput_Port = ppif.exOutput_Port;
 
-   assign dpif.dmemREN = ppif.exdRE;
-   assign dpif.dmemWEN = ppif.exdWE;
+   assign dpif.dmemREN = ppif.memcuDRE;
+   assign dpif.dmemWEN = ppif.memcuDWE;
    assign dpif.dmemaddr = ppif.exOutput_Port;
    assign dpif.dmemstore = ppif.exrdat2;
    
@@ -139,20 +138,18 @@ module datapath (
    //Write Back Stage
    //FROM MEM/WB REG
 
-   always_comb
+   always_comb //NEEDS TO HANDLE LUI
      begin
-	if(ppif.idLUIflag)
-	  rfif.wdat = {ppif.idinstr[15:0],16'd0};
-	else if(ppif.idJALflag)
-	  rfif.wdat = ;//JMPADDR;
-	else if(ppif.memMemToReg)
-	  rfif.wdat = ppif.memdmemload;
+	if(ppif.wbLUIflag)
+	  rfif.wdat = ppif.wbLUIdata;
+	else if(ppif.wbMemToReg)
+	  rfif.wdat = ppif.wbdmemload;
 	else
-	  rfif.wdat = ppif.memOutput_Port;
+	  rfif.wdat = ppif.wbOutput_Port;
      end
 
-   assign rfif.WEN = ppif.memWEN;
-   assign rfif.wsel = ppif.memwsel;
+   assign rfif.WEN = ppif.wbWEN;
+   assign rfif.wsel = ppif.wbwsel;
 
    
 

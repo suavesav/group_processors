@@ -22,13 +22,13 @@ module ifid
       ifidif.idinstr <= ifidif.ifinstr;
       ifidif.idrsel1 <= ifidif.ifinstr[25:21];
       ifidif.idrsel2 <= ifidif.ifinstr[20:16];
+       if(ifidif.ifRST)
+	 begin
+	    ifidif.idJALjump_addr <= '0;
+	    ifidif.idinstr <= '0;
+	    ifidif.idrsel1 <= '0;
+	    ifidif.idrsel2 <= '0;
+	 end
     end
-    else if(ifidif.ifRST)
-      begin
-	 ifidif.idJALjump_addr <= '0;
-	 ifidif.idinstr <= '0;
-	 ifidif.idrsel1 <= '0;
-	 ifidif.idrsel2 <= '0;
-      end
   end
 endmodule // FETCH_DECODE

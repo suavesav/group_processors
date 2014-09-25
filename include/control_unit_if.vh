@@ -8,7 +8,7 @@ interface control_unit_if;
 
    word_t instr;
    logic WEN, brnch_eq, brnch_ne, jmp, JR, JALflag;
-   logic cuDRE, cuDWE, cuIRE;
+   logic cuDRE, cuDWE, cuIRE, cuHALT;
    aluop_t ALUOP;
    logic ALUsrc, EXTop, RegDst, MemToReg, SHIFTflag, LUIflag;
 
