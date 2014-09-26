@@ -1,6 +1,6 @@
 `include "if_id_if.vh"
 
-module ifid
+module if_id
   import cpu_types_pkg::*;
    (
     input logic CLK, nRST,

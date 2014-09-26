@@ -1,6 +1,6 @@
 `include "mem_wb_if.vh"
 
-module memwb
+module mem_wb
   import cpu_types_pkg::*;
   (
     input logic CLK, nRST,

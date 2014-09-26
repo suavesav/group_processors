@@ -1,6 +1,6 @@
 `include "ex_mem_if.vh"
 
-module exmem
+module ex_mem
   import cpu_types_pkg::*;
    (
     input logic CLK, nRST,

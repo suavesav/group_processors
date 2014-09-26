@@ -1,6 +1,6 @@
 `include "id_ex_if.vh"
 
-module idex
+module id_ex
   import cpu_types_pkg::*;
    (
     input logic CLK, nRST,
