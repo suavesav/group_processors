@@ -41,10 +41,10 @@ module datapath (
    register_file RF(CLK, nRST, rfif);
    ALU ALU(aluif);
    control_unit CU(cuif);
-   ifid IF(CLK, nRST, ifif); 
-   idex ID(CLK, nRST, idif); 
-   exmem EX(CLK, nRST, exif); 
-   memwb MEM(CLK, nRST, memif);
+   if_id IF(CLK, nRST, ifif); 
+   id_ex ID(CLK, nRST, idif); 
+   ex_mem EX(CLK, nRST, exif); 
+   mem_wb MEM(CLK, nRST, memif);
    hazard_unit HZ(hzif);
    
 
