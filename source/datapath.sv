@@ -28,6 +28,8 @@ module datapath (
    id_ex_if idif();
    ex_mem_if exif();
    mem_wb_if memif();
+   hazard_unit_if hzif();
+   
    
 
    //DEFINITIONS
@@ -43,7 +45,8 @@ module datapath (
    idex ID(CLK, nRST, idif); 
    exmem EX(CLK, nRST, exif); 
    memwb MEM(CLK, nRST, memif);
- 
+   hazard_unit HZ(hzif);
+   
 
    //TIE MODULES
 
@@ -176,39 +179,7 @@ module datapath (
    assign memif.memW = hzif.memW;
    assign memif.memRST = hzif.memRST;
    
-   /*assign memif.memW = 1;
-   assign memif.memRST = 0;
    
-   always_comb
-     begin
-	if((exif.memcuDRE == 1 || exif.memcuDWE == 1) && !dpif.dhit)
-	  begin
-	     ifif.ifW = 0;
-	     idif.idW = 0;
-	     exif.exW = 0;
-	  end
-	else if(dpif.dhit)
-	  begin
-	     ifif.ifW = 1;
-	     ifif.ifRST = 1;
-	     idif.idW = 1;
-	     exif.exW = 1;
-	  end
-	else if(dpif.ihit)
-	  begin
-	     ifif.ifRST = 0;
-	  end
-	else
-	  begin
-	     ifif.ifW = 1;
-	     idif.idW = 1;
-	     exif.exW = 1;
-	     ifif.ifRST = 0;
-	     idif.idRST = 0;
-	     exif.exRST = 0;
-	  end // else: !if(dpif.ihit)
-     end*/
-
    always_comb
      begin
 	if(exif.memcuDRE == 0 || exif.memcuDWE == 0)

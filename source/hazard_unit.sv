@@ -39,3 +39,4 @@ module hazard_unit
 	     hzif.exRST = 0;
 	  end // else: !if(dpif.ihit)
      end
+endmodule
