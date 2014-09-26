@@ -162,7 +162,21 @@ module datapath (
 	  rfif.wdat = memif.wbOutput_Port;
      end
 
-   assign memif.memW = 1;
+   assign hzif.memcuDRE = exif.memcuDRE;
+   assign hzif.memcuDWE = exif.memcuDWE;
+   assign hzif.dhit = dpif.dhit;
+   assign hzif.ihit = dpif.ihit;
+
+   assign ifif.ifW = hzif.ifW;
+   assign ifif.ifRST = hzif.ifRST;
+   assign idif.idW = hzif.idW;
+   assign idif.idRST = hzif.idRST;
+   assign exif.exW = hzif.exW;
+   assign exif.exRST = hzif.exRST;
+   assign memif.memW = hzif.memW;
+   assign memif.memRST = hzif.memRST;
+   
+   /*assign memif.memW = 1;
    assign memif.memRST = 0;
    
    always_comb
@@ -193,7 +207,7 @@ module datapath (
 	     idif.idRST = 0;
 	     exif.exRST = 0;
 	  end // else: !if(dpif.ihit)
-     end
+     end*/
 
    always_comb
      begin
@@ -205,11 +219,6 @@ module datapath (
 	  pcWEN = dpif.dhit;
      end
    
-   
-
    assign addr = iaddr + 4;
-   
-
-
    
 endmodule // datapath
