@@ -162,9 +162,6 @@ module datapath (
 	  rfif.wdat = memif.wbOutput_Port;
      end
 
-   //assign rfif.WEN = memif.wbWEN;
-   //assign rfif.wsel = memif.wbwsel;
-
    assign memif.memW = 1;
    assign memif.memRST = 0;
    
