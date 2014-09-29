@@ -79,8 +79,6 @@ module datapath (
    assign idif.idWEN = cuif.WEN;
    assign idif.idbrnch_eq = cuif.brnch_eq;
    assign idif.idbrnch_ne = cuif.brnch_ne;
-   assign idif.idjmp = cuif.jmp;
-   assign idif.idJR = cuif.JR;
    assign idif.idJALflag = cuif.JALflag;
    assign idif.idcuDRE = cuif.cuDRE;
    assign idif.idcuDWE = cuif.cuDWE;
@@ -124,6 +122,10 @@ module datapath (
      end // always_comb
    
    assign exif.exwsel = idif.exJALflag ? 5'd31 : (idif.exRegDst ? idif.exrd : idif.exrt);
+
+   assign hzif.val_brnch = (aluif.Zero && idif.exbrnch_eq) || (!aluif.Zero && idif.exbrnch_ne);
+   
+
    
    //TO EX/MEM REG
    assign exif.excuDRE = idif.excuDRE;
@@ -135,7 +137,6 @@ module datapath (
    assign exif.exinstr = idif.exinstr;
    
    assign exif.exOutput_Port = aluif.Output_Port;
-   assign exif.exZero = aluif.Zero;
    assign exif.exrdat2 = idif.exrdat2;
 
    //Memory Cycle
@@ -199,8 +200,10 @@ module datapath (
    //assign addr = iaddr + 4;
    always_comb
      begin
-	if(cuif.jmp || cuif.JALflag)
-	  addr = {temp_addr[31:28],dpif.imemload[25:0],2'b00};
+	if((aluif.Zero && idif.exbrnch_eq) || (!aluif.Zero && idif.exbrnch_ne))
+	  addr = (iaddr + 4) + {14'd0,idif.exinstr[15:0],2'b00};
+	else if(cuif.jmp || cuif.JALflag)
+	  addr = {temp_addr[31:28],ifif.idinstr[25:0],2'b00};
 	else if(cuif.JR)
 	  addr = rfif.rdat1;
 	else

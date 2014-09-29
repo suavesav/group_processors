@@ -31,7 +31,7 @@ module hazard_unit
 	     hzif.idRST = 0; //hzif.idRST;
 	     hzif.exRST = 0; //hzif.exRST;
 	  end
-	else if(hzif.ihit && (!hzif.cujmp && !hzif.cuJR && !hzif.cuJALflag))
+	else if(hzif.ihit && (!hzif.cujmp && !hzif.cuJR && !hzif.cuJALflag && !hzif.val_brnch))
 	  begin
 	     hzif.ifW = 1; //hzif.ifW;
 	     hzif.idW = 1; //hzif.idW;
@@ -59,6 +59,16 @@ module hazard_unit
 	     hzif.memW = 0;
 	     hzif.ifRST = 1;
 	     hzif.idRST = 0;
+	     hzif.exRST = 0;
+	  end
+	else if(hzif.val_brnch)
+	  begin
+	     hzif.ifW = 1;
+	     hzif.idW = 1;
+	     hzif.exW = 1;
+	     hzif.memW = 1;
+	     hzif.ifRST = 1;
+	     hzif.idRST = 1;
 	     hzif.exRST = 0;
 	  end
 	else

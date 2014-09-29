@@ -18,8 +18,7 @@ interface id_ex_if;
 
   //INSTRUCTION DECODE
   logic idW, idRST;
-  logic idcuDRE, idcuDWE, idcuHALT, idMemToReg, idbrnch_ne, idbrnch_eq, idRegDst, idjmp, idJR, idJALflag, idWEN,
-idLUIflag, idALUsrc, idSHIFTflag, idEXTop;
+  logic idcuDRE, idcuDWE, idcuHALT, idMemToReg, idbrnch_ne, idbrnch_eq, idRegDst, idWEN, idJALflag, idLUIflag, idALUsrc, idSHIFTflag, idEXTop;
   aluop_t idALUOP;
   word_t idrdat1, idrdat2, idinstr, idJALjump_addr;
   logic [4:0] idrsel1, idrsel2;
@@ -34,10 +33,9 @@ exWEN, exLUIflag, exSHIFTflag, exEXTop, exALUsrc;
   
   // register file ports
   modport idex(
-    input   idW, idRST, idcuDRE, idcuDWE, idcuHALT, idMemToReg, idbrnch_ne, idbrnch_eq, idRegDst, idjmp, idJR, 
-idJALflag, idWEN, idLUIflag, idALUsrc, idSHIFTflag, idEXTop, idALUOP, idrdat1, idrdat2, idinstr,
-    output  excuDRE, excuDWE, excuHALT, exMemToReg, exbrnch_ne, exbrnch_eq, exRegDst, exbrnch_addr, exjmp, exJR, exJALflag,
-exWEN, exLUIflag, exSHIFTflag, exALUOP, exEXTop, exALUsrc, exrdat1, exrdat2, exrd, exrt, exSHIFTval, exinstr
+    input   idW, idRST, idcuDRE, idcuDWE, idcuHALT, idMemToReg, idbrnch_ne, idbrnch_eq, idRegDst, idWEN, idLUIflag, idJALflag, idALUsrc, idSHIFTflag, idEXTop, idALUOP, idrdat1, idrdat2, idinstr,
+    output  excuDRE, excuDWE, excuHALT, exMemToReg, exbrnch_ne, exbrnch_eq, exRegDst, exbrnch_addr, 
+exWEN, exJALflag, exLUIflag, exSHIFTflag, exALUOP, exEXTop, exALUsrc, exrdat1, exrdat2, exrd, exrt, exSHIFTval, exinstr
   );
   
 endinterface

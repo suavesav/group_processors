@@ -34,20 +34,20 @@ module ex_mem
 	     exmemif.memrdat2 <= exmemif.exrdat2;
 	     exmemif.meminstr <= exmemif.exinstr;
 	     exmemif.memLUIflag <= exmemif.exLUIflag;
-	     if(exmemif.exRST)
-	       begin
-		  exmemif.memcuDRE <= 0;
-		  exmemif.memcuDWE <= 0;
-		  exmemif.memcuHALT <= 0;
-		  exmemif.memMemToReg <= 0;
-		  exmemif.memWEN <= 0;
-		  exmemif.memwsel <= '0;
-		  exmemif.memOutput_Port <= '0;
-		  exmemif.memrdat2 <= '0;
-		  exmemif.meminstr <= '0;
-		  exmemif.memLUIflag <= 0;
-	       end
-	  end // if (exmemif.exW)
+	  end
+	else if(exmemif.exRST)
+	  begin
+	     exmemif.memcuDRE <= 0;
+	     exmemif.memcuDWE <= 0;
+	     exmemif.memcuHALT <= 0;
+	     exmemif.memMemToReg <= 0;
+	     exmemif.memWEN <= 0;
+	     exmemif.memwsel <= '0;
+	     exmemif.memOutput_Port <= '0;
+	     exmemif.memrdat2 <= '0;
+	     exmemif.meminstr <= '0;
+	     exmemif.memLUIflag <= 0;
+	  end
      end // always_ff @
    
 endmodule // EXECUTE_MEMORY

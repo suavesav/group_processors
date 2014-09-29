@@ -18,8 +18,7 @@ interface ex_mem_if;
 
   //EXECUTE
   logic exW, exRST;
-  logic excuDRE, excuDWE, excuHALT, exMemToReg, 
-exWEN, exLUIflag, exZero;
+  logic excuDRE, excuDWE, excuHALT, exMemToReg, exWEN, exLUIflag;
   aluop_t exALUOP;
   word_t exrdat2, exOutput_Port, exinstr;
   logic [4:0] exwsel;
@@ -34,7 +33,7 @@ exWEN, exLUIflag, exZero;
   // register file ports
 
   modport exmem(
-    input   exW, exRST, excuDRE, excuDWE, excuHALT, exMemToReg, exWEN, exLUIflag, exwsel, exZero, exOutput_Port, exrdat2, exinstr,
+    input   exW, exRST, excuDRE, excuDWE, excuHALT, exMemToReg, exWEN, exLUIflag, exwsel, exOutput_Port, exrdat2, exinstr,
     output  memcuDRE, memcuDWE, memcuHALT, memMemToReg, memWEN, memLUIflag, memwsel, memOutput_Port, memrdat2, meminstr
   );
 endinterface
