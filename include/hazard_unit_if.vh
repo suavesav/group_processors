@@ -16,13 +16,13 @@ interface hazard_unit_if;
    // import types
    import cpu_types_pkg::*;
    
-   logic ihit, dhit, memcuDRE, memcuDWE;
+   logic ihit, dhit, memcuDRE, memcuDWE, cujmp, cuJR, cuJALflag;
    logic ifW, idW, exW, memW, ifRST, idRST, exRST, memRST;
    
    // register file ports
    
    modport hz(
-	      input  ihit, dhit, memcuDRE, memcuDWE,
+	      input  ihit, dhit, memcuDRE, memcuDWE, cujmp, cuJR, cuJALflag,
 	      output ifW, idW, exW, memW, ifRST, idRST, exRST, memRST
 	      );
    

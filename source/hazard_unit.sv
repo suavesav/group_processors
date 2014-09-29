@@ -7,7 +7,6 @@ module hazard_unit
     hazard_unit_if.hz hzif
     );
 
-   assign hzif.memW = 1;
    assign hzif.memRST = 0;
    
    always_comb
@@ -17,6 +16,7 @@ module hazard_unit
 	     hzif.ifW = 0;
 	     hzif.idW = 0;
 	     hzif.exW = 0;
+	     hzif.memW = 1;
 	     hzif.ifRST = 0; //hzif.ifRST;
 	     hzif.idRST = 0; //hzif.idRST;
 	     hzif.exRST = 0; //hzif.exRST;
@@ -27,23 +27,46 @@ module hazard_unit
 	     hzif.ifRST = 1;
 	     hzif.idW = 1;
 	     hzif.exW = 1;
+	     hzif.memW = 1;
 	     hzif.idRST = 0; //hzif.idRST;
 	     hzif.exRST = 0; //hzif.exRST;
 	  end
-	else if(hzif.ihit)
+	else if(hzif.ihit && (!hzif.cujmp && !hzif.cuJR && !hzif.cuJALflag))
 	  begin
 	     hzif.ifW = 1; //hzif.ifW;
 	     hzif.idW = 1; //hzif.idW;
 	     hzif.exW = 1; //hzif.exW;
+	     hzif.memW = 1;
 	     hzif.ifRST = 0;
 	     hzif.idRST = 0; //hzif.idRST;
 	     hzif.exRST = 0; //hzif.exRST;
+	  end
+	else if(hzif.cujmp || hzif.cuJR)
+	  begin
+	     hzif.ifW = 1;
+	     hzif.idW = 1;
+	     hzif.exW = 1;
+	     hzif.memW = 1;
+	     hzif.ifRST = 1;
+	     hzif.idRST = 0;
+	     hzif.exRST = 0;
+	  end
+	else if(hzif.cuJALflag)
+	  begin
+	     hzif.ifW = 0;
+	     hzif.idW = 0;
+	     hzif.exW = 0;
+	     hzif.memW = 0;
+	     hzif.ifRST = 1;
+	     hzif.idRST = 0;
+	     hzif.exRST = 0;
 	  end
 	else
 	  begin
 	     hzif.ifW = 1;
 	     hzif.idW = 1;
 	     hzif.exW = 1;
+	     hzif.memW = 1;
 	     hzif.ifRST = 0;
 	     hzif.idRST = 0;
 	     hzif.exRST = 0;

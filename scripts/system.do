@@ -10,6 +10,22 @@ add wave -noupdate /system_tb/DUT/syif/REN
 add wave -noupdate /system_tb/DUT/syif/addr
 add wave -noupdate /system_tb/DUT/syif/store
 add wave -noupdate /system_tb/DUT/syif/load
+add wave -noupdate -divider Hazard
+add wave -noupdate /system_tb/DUT/CPU/DP/hzif/ihit
+add wave -noupdate /system_tb/DUT/CPU/DP/hzif/dhit
+add wave -noupdate /system_tb/DUT/CPU/DP/hzif/memcuDRE
+add wave -noupdate /system_tb/DUT/CPU/DP/hzif/memcuDWE
+add wave -noupdate /system_tb/DUT/CPU/DP/hzif/cujmp
+add wave -noupdate /system_tb/DUT/CPU/DP/hzif/cuJR
+add wave -noupdate /system_tb/DUT/CPU/DP/hzif/cuJALflag
+add wave -noupdate /system_tb/DUT/CPU/DP/hzif/ifW
+add wave -noupdate /system_tb/DUT/CPU/DP/hzif/idW
+add wave -noupdate /system_tb/DUT/CPU/DP/hzif/exW
+add wave -noupdate /system_tb/DUT/CPU/DP/hzif/memW
+add wave -noupdate /system_tb/DUT/CPU/DP/hzif/ifRST
+add wave -noupdate /system_tb/DUT/CPU/DP/hzif/idRST
+add wave -noupdate /system_tb/DUT/CPU/DP/hzif/exRST
+add wave -noupdate /system_tb/DUT/CPU/DP/hzif/memRST
 add wave -noupdate -divider PC
 add wave -noupdate /system_tb/DUT/CPU/DP/PC/CLK
 add wave -noupdate /system_tb/DUT/CPU/DP/PC/nRST
@@ -173,4 +189,4 @@ configure wave -griddelta 40
 configure wave -timeline 0
 configure wave -timelineunits ns
 update
-WaveRestoreZoom {9505017050 ps} {9505546472 ps}
+WaveRestoreZoom {1392089028 ps} {1392258972 ps}

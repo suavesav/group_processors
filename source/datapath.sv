@@ -72,7 +72,7 @@ module datapath (
    assign rfif.rsel1 = ifif.idrsel1;          
    assign rfif.rsel2 = ifif.idrsel2;          
    //assign rfif.wdat = memif.wbMemToReg ? memif.wbdmemload : memif.wbOutput_Port;
-   assign rfif.wsel = memif.wbwsel;
+   assign rfif.wsel = cuif.JALflag ? 5'd31 : memif.wbwsel;
    assign rfif.WEN = memif.wbWEN;              
    
    //TO ID/EX REG
@@ -97,6 +97,10 @@ module datapath (
    assign idif.idrdat2 = rfif.rdat2;
 
    assign idif.idinstr = ifif.idinstr;
+
+   assign hzif.cujmp = cuif.jmp;
+   assign hzif.cuJR = cuif.JR;
+   assign hzif.cuJALflag = cuif.JALflag;
    
    //Execute Cycle
    //FROM ID/EX REG
@@ -161,6 +165,8 @@ module datapath (
 	  rfif.wdat = memif.wbLUIdata;
 	else if(memif.wbMemToReg)
 	  rfif.wdat = memif.wbdmemload;
+	else if(cuif.JALflag)
+	  rfif.wdat = iaddr + 4;
 	else
 	  rfif.wdat = memif.wbOutput_Port;
      end
@@ -190,6 +196,16 @@ module datapath (
 	  pcWEN = dpif.dhit;
      end
    
-   assign addr = iaddr + 4;
+   //assign addr = iaddr + 4;
+   always_comb
+     begin
+	if(cuif.jmp || cuif.JALflag)
+	  addr = {temp_addr[31:28],dpif.imemload[25:0],2'b00};
+	else if(cuif.JR)
+	  addr = rfif.rdat1;
+	else
+	  addr = iaddr + 4;
+     end
+   
    
 endmodule // datapath
