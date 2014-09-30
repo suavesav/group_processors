@@ -67,7 +67,7 @@ module hazard_unit
 	     hzif.idW = 1;
 	     hzif.exW = 1;
 	     hzif.memW = 1;
-	     hzif.ifRST = 1;
+	     hzif.ifRST = 0;
 	     hzif.idRST = 1;
 	     hzif.exRST = 0;
 	  end

@@ -9,8 +9,6 @@
   sw    $1, 0($2)
 braZ:
   jal   braR
-  nop
-  nop
   sw    $1, 4($2)
 end:
   nop

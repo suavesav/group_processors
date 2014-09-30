@@ -73,7 +73,7 @@ module datapath (
    assign rfif.rsel2 = ifif.idrsel2;          
    //assign rfif.wdat = memif.wbMemToReg ? memif.wbdmemload : memif.wbOutput_Port;
    assign rfif.wsel = cuif.JALflag ? 5'd31 : memif.wbwsel;
-   assign rfif.WEN = memif.wbWEN;              
+   assign rfif.WEN = cuif.JALflag ? 1 : memif.wbWEN;              
    
    //TO ID/EX REG
    assign idif.idWEN = cuif.WEN;
@@ -121,7 +121,8 @@ module datapath (
 	  end
      end // always_comb
    
-   assign exif.exwsel = idif.exJALflag ? 5'd31 : (idif.exRegDst ? idif.exrd : idif.exrt);
+   //assign exif.exwsel = idif.exJALflag ? 5'd31 : (idif.exRegDst ? idif.exrd : idif.exrt);
+   assign exif.exwsel = idif.exRegDst ? idif.exrd : idif.exrt;
 
    assign hzif.val_brnch = (aluif.Zero && idif.exbrnch_eq) || (!aluif.Zero && idif.exbrnch_ne);
    
