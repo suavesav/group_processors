@@ -71,6 +71,16 @@ module hazard_unit
 	     hzif.idRST = 1;
 	     hzif.exRST = 0;
 	  end
+	else if(hzif.cuHALT)
+	  begin
+	     hzif.ifW = 0;
+	     hzif.idW = 1;
+	     hzif.exW = 1;
+	     hzif.memW = 1;
+	     hzif.ifRST = 0;
+	     hzif.idRST = 0;
+	     hzif.exRST = 0;
+	  end
 	else
 	  begin
 	     hzif.ifW = 1;

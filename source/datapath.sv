@@ -192,10 +192,10 @@ module datapath (
      begin
 	if(exif.memcuDRE == 0 || exif.memcuDWE == 0)
 	  pcWEN = dpif.ihit;
-	else if(memif.wbcuHALT)
+	else if(cuif.cuHALT)
 	  pcWEN = 0;
 	else
-	  pcWEN = dpif.dhit;
+	  pcWEN = dpif.dhit && !cuif.cuHALT;
      end
    
    //assign addr = iaddr + 4;
