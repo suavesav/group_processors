@@ -17,7 +17,7 @@ interface if_id_if;
 
   //INSTRUCTION FETCH
   logic ifW, ifRST;
-  word_t ifJALjump_addr, ifinstr;
+  word_t ifJALjump_addr, ifinstr, ifiaddr, idiaddr;
 
   //INSTRUCTION DECODE
   word_t idinstr, idJALjump_addr;
@@ -25,8 +25,8 @@ interface if_id_if;
 
   // register file ports
   modport ifid (
-    input   ifW, ifRST, ifJALjump_addr, ifinstr,
-    output  idinstr, idJALjump_addr, idrsel1, idrsel2
+    input   ifW, ifRST, ifJALjump_addr, ifinstr, ifiaddr,
+    output  idinstr, idJALjump_addr, idrsel1, idrsel2, idiaddr
   );
 
 endinterface

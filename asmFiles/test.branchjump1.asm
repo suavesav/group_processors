@@ -11,8 +11,6 @@ braZ:
   jal   braR
   sw    $1, 4($2)
 end:
-  nop
-  nop
   sw    $ra, 16($2)
   HALT
 braR:
