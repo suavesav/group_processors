@@ -220,7 +220,7 @@ module datapath (
 	if(((ifif.idrsel1 == exif.exwsel) && (exif.exwsel != 5'd0)) || ((ifif.idrsel1 == memif.memwsel) && (memif.memwsel != 5'd0)))
 	  hzif.data_hazard = 1;
 	//else if((((ifif.idrsel2 == exif.exwsel) || (ifif.idrsel2 == memif.memwsel)) && !cuif.RegDst) && ((exif.exwsel != 5'd0) || (memif.memwsel != 5'd0)))
-	else if(((ifif.idrsel2 == exif.exwsel) && (exif.exwsel != 5'd0) && !cuif.RegDst) && ((ifif.idrsel2 == memif.memwsel) && (memif.memwsel != 5'd0) && !cuif.RegDst))
+	else if(((ifif.idrsel2 == exif.exwsel) && (exif.exwsel != 5'd0) && !cuif.RegDst) || ((ifif.idrsel2 == memif.memwsel) && (memif.memwsel != 5'd0) && !cuif.RegDst))
 	  hzif.data_hazard = 1;
 	else
 	  hzif.data_hazard = 0;
