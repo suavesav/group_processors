@@ -162,6 +162,26 @@ module control_unit
 	     cuif.cuIRE = 0;
 	     cuif.cuHALT = 1;
 	  end
+	else if(cuif.instr == 32'd0) //NOP
+	  begin
+	     cuif.WEN = 0;
+	     cuif.brnch_eq = 0;
+	     cuif.brnch_ne = 0;
+	     cuif.jmp = 0;
+	     cuif.JR = 0;
+	     cuif.cuDRE = 0;
+	     cuif.cuDWE = 0;
+	     cuif.cuIRE = 1;
+	     cuif.ALUOP = ALU_SLL;
+	     cuif.ALUsrc = 0;
+	     cuif.EXTop = 0;
+	     cuif.RegDst = 0;
+	     cuif.MemToReg = 0;
+	     cuif.JALflag = 0;
+	     cuif.SHIFTflag = 0;
+	     cuif.LUIflag = 0;
+	     cuif.cuHALT = 0;
+	  end
      end // always_comb
    
 endmodule // control_unit

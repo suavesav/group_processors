@@ -62,8 +62,8 @@ module datapath (
    assign ifif.ifinstr = dpif.imemload;
    assign temp_addr = iaddr + 4;
    assign ifif.ifJALjump_addr = {temp_addr[31:28],dpif.imemload[25:0],2'b00};
-
-
+   assign ifif.ifiaddr = iaddr;
+   
    //Decode Cycle
      
    //FROM IF/ID REG
@@ -73,7 +73,7 @@ module datapath (
    assign rfif.rsel2 = ifif.idrsel2;          
    //assign rfif.wdat = memif.wbMemToReg ? memif.wbdmemload : memif.wbOutput_Port;
    assign rfif.wsel = cuif.JALflag ? 5'd31 : memif.wbwsel;
-   assign rfif.WEN = memif.wbWEN;              
+   assign rfif.WEN = cuif.JALflag ? 1 : memif.wbWEN;              
    
    //TO ID/EX REG
    assign idif.idWEN = cuif.WEN;
@@ -95,7 +95,8 @@ module datapath (
    assign idif.idrdat2 = rfif.rdat2;
 
    assign idif.idinstr = ifif.idinstr;
-
+   assign idif.idiaddr = ifif.idiaddr;
+   
    assign hzif.cujmp = cuif.jmp;
    assign hzif.cuJR = cuif.JR;
    assign hzif.cuJALflag = cuif.JALflag;
@@ -121,18 +122,17 @@ module datapath (
 	  end
      end // always_comb
    
-   assign exif.exwsel = idif.exJALflag ? 5'd31 : (idif.exRegDst ? idif.exrd : idif.exrt);
+   assign exif.exwsel = idif.exRegDst ? idif.exrd : idif.exrt;
 
    assign hzif.val_brnch = (aluif.Zero && idif.exbrnch_eq) || (!aluif.Zero && idif.exbrnch_ne);
    
-
    
    //TO EX/MEM REG
    assign exif.excuDRE = idif.excuDRE;
    assign exif.excuDWE = idif.excuDWE;
    assign exif.excuHALT = idif.excuHALT;
    assign exif.exMemToReg = idif.exMemToReg;
-   assign exif.exWEN = idif.idWEN;
+   assign exif.exWEN = idif.exWEN;
    assign exif.exLUIflag = idif.exLUIflag;
    assign exif.exinstr = idif.exinstr;
    
@@ -167,7 +167,7 @@ module datapath (
 	else if(memif.wbMemToReg)
 	  rfif.wdat = memif.wbdmemload;
 	else if(cuif.JALflag)
-	  rfif.wdat = iaddr + 4;
+	  rfif.wdat = ifif.idiaddr + 4;
 	else
 	  rfif.wdat = memif.wbOutput_Port;
      end
@@ -189,19 +189,19 @@ module datapath (
    
    always_comb
      begin
-	if(exif.memcuDRE == 0 || exif.memcuDWE == 0)
+	if((exif.memcuDRE == 0 || exif.memcuDWE == 0) && !hzif.data_hazard)
 	  pcWEN = dpif.ihit;
-	else if(memif.wbcuHALT)
+	else if(cuif.cuHALT || hzif.data_hazard)
 	  pcWEN = 0;
 	else
-	  pcWEN = dpif.dhit;
+	  pcWEN = dpif.dhit && !cuif.cuHALT;
      end
    
    //assign addr = iaddr + 4;
    always_comb
      begin
 	if((aluif.Zero && idif.exbrnch_eq) || (!aluif.Zero && idif.exbrnch_ne))
-	  addr = (iaddr + 4) + {14'd0,idif.exinstr[15:0],2'b00};
+	  addr = (idif.exiaddr + 4) + {14'd0,idif.exinstr[15:0],2'b00};
 	else if(cuif.jmp || cuif.JALflag)
 	  addr = {temp_addr[31:28],ifif.idinstr[25:0],2'b00};
 	else if(cuif.JR)
@@ -210,5 +210,22 @@ module datapath (
 	  addr = iaddr + 4;
      end
    
+   //HANDLING DATA HAZARDS
+   //assign hzif.data_hazard = ((idif.exWEN && (exif.exwsel != 5'd0)) && (ifif.idrsel1 == exif.exwsel) || ((ifif.idrsel2 == exif.exwsel) && !cuif.RegDst));
+   //assign hzif.hazard_comp = (ifif.idrsel1 == rfif.wsel) || ((ifif.idrsel2 == rfif.wsel) && !cuif.RegDst) && rfif.WEN;
+  
+   always_comb
+     begin
+	//if(((ifif.idrsel1 == exif.exwsel) || (ifif.idrsel1 == memif.memwsel)) && ((exif.exwsel != 5'd0) || (memif.memwsel != 5'd0)))
+	if(((ifif.idrsel1 == exif.exwsel) && (exif.exwsel != 5'd0)) || ((ifif.idrsel1 == memif.memwsel) && (memif.memwsel != 5'd0)))
+	  hzif.data_hazard = 1;
+	//else if((((ifif.idrsel2 == exif.exwsel) || (ifif.idrsel2 == memif.memwsel)) && !cuif.RegDst) && ((exif.exwsel != 5'd0) || (memif.memwsel != 5'd0)))
+	else if(((ifif.idrsel2 == exif.exwsel) && (exif.exwsel != 5'd0) && !cuif.RegDst) || ((ifif.idrsel2 == memif.memwsel) && (memif.memwsel != 5'd0) && !cuif.RegDst))
+	  hzif.data_hazard = 1;
+	else
+	  hzif.data_hazard = 0;
+     end // always_comb
+   
+
    
 endmodule // datapath

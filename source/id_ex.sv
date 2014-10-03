@@ -31,6 +31,7 @@ module id_ex
 	     idexif.exSHIFTval <= '0;
 	     idexif.exinstr <= '0;
 	     idexif.exLUIflag <= 0;
+	     idexif.exiaddr <= '0;
 	  end
 	else if(idexif.idRST)
 	  begin
@@ -54,6 +55,7 @@ module id_ex
 	     idexif.exSHIFTval <= '0;
 	     idexif.exinstr <= '0;
 	     idexif.exLUIflag <= 0;
+	     idexif.exiaddr <= '0;
 	  end // if (idexif.idRST)
 	else if(idexif.idW)
 	  begin
@@ -77,6 +79,7 @@ module id_ex
 	     idexif.exSHIFTval <= idexif.idinstr[10:6];
 	     idexif.exinstr <= idexif.idinstr[15:0];
 	     idexif.exLUIflag <= idexif.idLUIflag;
+	     idexif.exiaddr <= idexif.idiaddr;
 	  end
      end
 endmodule // DECODE_EXECUTE
