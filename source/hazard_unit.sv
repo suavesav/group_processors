@@ -81,6 +81,7 @@ module hazard_unit
 	     hzif.idRST = 0;
 	     hzif.exRST = 0;
 	  end
+	  /*
 	else if(hzif.data_hazard)
 	  begin
 	     hzif.ifW = 0;
@@ -91,6 +92,7 @@ module hazard_unit
 	     hzif.idRST = 1;
 	     hzif.exRST = 0;
 	  end
+	  */
 	else
 	  begin
 	     hzif.ifW = 1;

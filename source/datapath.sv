@@ -34,7 +34,8 @@ module datapath (
 
    //DEFINITIONS
    logic 		     pcWEN, Negative, Overflow, datomic = 0;
-   word_t iaddr, addr, temp_addr;
+   logic        hazard_mem_1, hazard_mem_2, hazard_wb_1, hazard_wb_2;
+   word_t       iaddr, addr, temp_addr;
 
    //MODPORTS
    PC PC(CLK, nRST, pcWEN, addr, iaddr);
@@ -104,7 +105,8 @@ module datapath (
    //Execute Cycle
    //FROM ID/EX REG
    assign aluif.ALUOP = idif.exALUOP;
-   assign aluif.Port_A = idif.exrdat1;
+   assign aluif.Port_A = (hazard_mem_1 == 1) ? exif.memOutput_Port : idif.exrdat1;
+   
    always_comb
      begin
 	if(idif.exSHIFTflag)
@@ -113,6 +115,8 @@ module datapath (
 	  aluif.Port_B = idif.exrdat2;
 	else if(!idif.exEXTop)
 	  aluif.Port_B = {16'd0,idif.exinstr[15:0]};
+	else if(hazard_mem_2 && !cuif.RegDst)
+	  aluif.Port_B = exif.memOutput_Port;
 	else
 	  begin
 	     if(idif.exinstr[15])
@@ -211,21 +215,22 @@ module datapath (
      end
    
    //HANDLING DATA HAZARDS
-   //assign hzif.data_hazard = ((idif.exWEN && (exif.exwsel != 5'd0)) && (ifif.idrsel1 == exif.exwsel) || ((ifif.idrsel2 == exif.exwsel) && !cuif.RegDst));
-   //assign hzif.hazard_comp = (ifif.idrsel1 == rfif.wsel) || ((ifif.idrsel2 == rfif.wsel) && !cuif.RegDst) && rfif.WEN;
-  
+    //assign hazard_wb_1 = ((ifif.idrsel1 == memif.wbwsel) && (memif.wbwsel != 5'd0)) ? 1 : 0;
+    //assign hazard_wb_2 = ((ifif.idrsel2 == memif.wbwsel) && (memif.wbwsel != 5'd0)) ? 1 : 0;
+    assign hazard_mem_1 = ((ifif.idrsel1 == exif.memwsel) && (exif.memwsel != 5'd0)) ? 1 : 0;
+    assign hazard_mem_2 = ((ifif.idrsel2 == exif.memwsel) && (exif.memwsel != 5'd0)) ? 1 : 0;
+    
+    /*
    always_comb
      begin
-	//if(((ifif.idrsel1 == exif.exwsel) || (ifif.idrsel1 == memif.memwsel)) && ((exif.exwsel != 5'd0) || (memif.memwsel != 5'd0)))
 	if(((ifif.idrsel1 == exif.exwsel) && (exif.exwsel != 5'd0)) || ((ifif.idrsel1 == memif.memwsel) && (memif.memwsel != 5'd0)))
 	  hzif.data_hazard = 1;
-	//else if((((ifif.idrsel2 == exif.exwsel) || (ifif.idrsel2 == memif.memwsel)) && !cuif.RegDst) && ((exif.exwsel != 5'd0) || (memif.memwsel != 5'd0)))
 	else if(((ifif.idrsel2 == exif.exwsel) && (exif.exwsel != 5'd0) && !cuif.RegDst) || ((ifif.idrsel2 == memif.memwsel) && (memif.memwsel != 5'd0) && !cuif.RegDst))
 	  hzif.data_hazard = 1;
 	else
 	  hzif.data_hazard = 0;
      end // always_comb
-   
+   */
 
    
 endmodule // datapath
