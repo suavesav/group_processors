@@ -115,7 +115,7 @@ module datapath (
 	  aluif.Port_B = idif.exrdat2;
 	else if(!idif.exEXTop)
 	  aluif.Port_B = {16'd0,idif.exinstr[15:0]};
-	else if(hazard_mem_2 && !cuif.RegDst)
+	else if(hazard_mem_2 && !idif.exRegDst)
 	  aluif.Port_B = exif.memOutput_Port;
 	else
 	  begin
@@ -217,8 +217,8 @@ module datapath (
    //HANDLING DATA HAZARDS
     //assign hazard_wb_1 = ((ifif.idrsel1 == memif.wbwsel) && (memif.wbwsel != 5'd0)) ? 1 : 0;
     //assign hazard_wb_2 = ((ifif.idrsel2 == memif.wbwsel) && (memif.wbwsel != 5'd0)) ? 1 : 0;
-    assign hazard_mem_1 = ((ifif.idrsel1 == exif.memwsel) && (exif.memwsel != 5'd0)) ? 1 : 0;
-    assign hazard_mem_2 = ((ifif.idrsel2 == exif.memwsel) && (exif.memwsel != 5'd0)) ? 1 : 0;
+    assign hzif.hazard_mem_1 = ((idif.exrsel1 == exif.memwsel) && (exif.memwsel != 5'd0)) ? 1 : 0;
+    assign hzif.hazard_mem_2 = ((idif.exrsel2 == exif.memwsel) && (exif.memwsel != 5'd0)) ? 1 : 0;
     
     /*
    always_comb
