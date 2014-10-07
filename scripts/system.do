@@ -28,6 +28,8 @@ add wave -noupdate /system_tb/DUT/CPU/DP/hzif/exRST
 add wave -noupdate /system_tb/DUT/CPU/DP/hzif/memRST
 add wave -noupdate /system_tb/DUT/CPU/DP/hzif/val_brnch
 add wave -noupdate /system_tb/DUT/CPU/DP/hzif/data_hazard
+add wave -noupdate /system_tb/DUT/CPU/DP/hazard_mem_1
+add wave -noupdate /system_tb/DUT/CPU/DP/hazard_mem_2
 add wave -noupdate -divider PC
 add wave -noupdate /system_tb/DUT/CPU/DP/PC/CLK
 add wave -noupdate /system_tb/DUT/CPU/DP/PC/nRST
@@ -89,6 +91,8 @@ add wave -noupdate /system_tb/DUT/CPU/DP/idif/idEXTop
 add wave -noupdate /system_tb/DUT/CPU/DP/idif/idALUOP
 add wave -noupdate /system_tb/DUT/CPU/DP/idif/idrdat1
 add wave -noupdate /system_tb/DUT/CPU/DP/idif/idrdat2
+add wave -noupdate /system_tb/DUT/CPU/DP/idif/idrsel1
+add wave -noupdate /system_tb/DUT/CPU/DP/idif/idrsel2
 add wave -noupdate /system_tb/DUT/CPU/DP/idif/idinstr
 add wave -noupdate /system_tb/DUT/CPU/DP/idif/excuDRE
 add wave -noupdate /system_tb/DUT/CPU/DP/idif/excuDWE
@@ -97,9 +101,6 @@ add wave -noupdate /system_tb/DUT/CPU/DP/idif/exMemToReg
 add wave -noupdate /system_tb/DUT/CPU/DP/idif/exbrnch_ne
 add wave -noupdate /system_tb/DUT/CPU/DP/idif/exbrnch_eq
 add wave -noupdate /system_tb/DUT/CPU/DP/idif/exRegDst
-add wave -noupdate /system_tb/DUT/CPU/DP/idif/exbrnch_addr
-add wave -noupdate /system_tb/DUT/CPU/DP/idif/exjmp
-add wave -noupdate /system_tb/DUT/CPU/DP/idif/exJR
 add wave -noupdate /system_tb/DUT/CPU/DP/idif/exJALflag
 add wave -noupdate /system_tb/DUT/CPU/DP/idif/exWEN
 add wave -noupdate /system_tb/DUT/CPU/DP/idif/exLUIflag
@@ -109,6 +110,8 @@ add wave -noupdate /system_tb/DUT/CPU/DP/idif/exALUsrc
 add wave -noupdate /system_tb/DUT/CPU/DP/idif/exALUOP
 add wave -noupdate /system_tb/DUT/CPU/DP/idif/exrdat1
 add wave -noupdate /system_tb/DUT/CPU/DP/idif/exrdat2
+add wave -noupdate /system_tb/DUT/CPU/DP/idif/exrsel1
+add wave -noupdate /system_tb/DUT/CPU/DP/idif/exrsel2
 add wave -noupdate /system_tb/DUT/CPU/DP/idif/exinstr
 add wave -noupdate /system_tb/DUT/CPU/DP/idif/exiaddr
 add wave -noupdate /system_tb/DUT/CPU/DP/idif/exrd
@@ -190,7 +193,7 @@ add wave -noupdate /system_tb/DUT/CPU/DP/dpif/dmemload
 add wave -noupdate /system_tb/DUT/CPU/DP/dpif/dmemstore
 add wave -noupdate /system_tb/DUT/CPU/DP/dpif/dmemaddr
 TreeUpdate [SetDefaultTree]
-WaveRestoreCursors {{Cursor 1} {23293 ps} 0}
+WaveRestoreCursors {{Cursor 1} {43498 ps} 0}
 quietly wave cursor active 1
 configure wave -namecolwidth 150
 configure wave -valuecolwidth 100
@@ -206,4 +209,4 @@ configure wave -griddelta 40
 configure wave -timeline 0
 configure wave -timelineunits ns
 update
-WaveRestoreZoom {0 ps} {740036 ps}
+WaveRestoreZoom {0 ps} {187622 ps}

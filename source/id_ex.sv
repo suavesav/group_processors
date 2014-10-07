@@ -32,8 +32,8 @@ module id_ex
 	     idexif.exinstr <= '0;
 	     idexif.exLUIflag <= 0;
 	     idexif.exiaddr <= '0;
-       idexif.exrsel1 <= 0;
-       idexif.exrsel2 <= 0;
+	     idexif.exrsel1 <= 0;
+	     idexif.exrsel2 <= 0;
 	  end
 	else if(idexif.idRST)
 	  begin
@@ -58,8 +58,8 @@ module id_ex
 	     idexif.exinstr <= '0;
 	     idexif.exLUIflag <= 0;
 	     idexif.exiaddr <= '0;
-       idexif.exrsel1 <= 0;
-       idexif.exrsel2 <= 0;
+	     idexif.exrsel1 <= 0;
+	     idexif.exrsel2 <= 0;
 	  end // if (idexif.idRST)
 	else if(idexif.idW)
 	  begin
@@ -84,8 +84,8 @@ module id_ex
 	     idexif.exinstr <= idexif.idinstr[15:0];
 	     idexif.exLUIflag <= idexif.idLUIflag;
 	     idexif.exiaddr <= idexif.idiaddr;
-       idexif.exrsel1 <= idexif.idrsel1;
-       idexif.exrsel2 <= idexif.idrsel2;
+	     idexif.exrsel1 <= idexif.idrsel1;
+	     idexif.exrsel2 <= idexif.idrsel2;
 	  end
      end
 endmodule // DECODE_EXECUTE

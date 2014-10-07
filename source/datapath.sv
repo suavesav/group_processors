@@ -34,7 +34,7 @@ module datapath (
 
    //DEFINITIONS
    logic 		     pcWEN, Negative, Overflow, datomic = 0;
-   logic        hazard_mem_1, hazard_mem_2, hazard_wb_1, hazard_wb_2;
+   logic 		     hazard_mem_1, hazard_mem_2; //, hazard_wb_1, hazard_wb_2;
    word_t       iaddr, addr, temp_addr;
 
    //MODPORTS
@@ -91,7 +91,8 @@ module datapath (
    assign idif.idMemToReg = cuif.MemToReg;
    assign idif.idSHIFTflag = cuif.SHIFTflag;
    assign idif.idLUIflag = cuif.LUIflag;
-
+   assign idif.idrsel1 = ifif.idrsel1;
+   assign idif.idrsel2 = ifif.idrsel2;
    assign idif.idrdat1 = rfif.rdat1;
    assign idif.idrdat2 = rfif.rdat2;
 
@@ -105,7 +106,7 @@ module datapath (
    //Execute Cycle
    //FROM ID/EX REG
    assign aluif.ALUOP = idif.exALUOP;
-   assign aluif.Port_A = (hazard_mem_1 == 1) ? exif.memOutput_Port : idif.exrdat1;
+   assign aluif.Port_A = (hazard_mem_1 == 1) ? (exif.memLUIflag ? {exif.meminstr[15:0],16'd0} : exif.memOutput_Port) : idif.exrdat1;
    
    always_comb
      begin
@@ -113,10 +114,10 @@ module datapath (
 	  aluif.Port_B = {27'd0,idif.exSHIFTval};
 	else if(!idif.exALUsrc)
 	  aluif.Port_B = idif.exrdat2;
+	else if(hazard_mem_2 && idif.exRegDst)
+	  aluif.Port_B = exif.memOutput_Port;
 	else if(!idif.exEXTop)
 	  aluif.Port_B = {16'd0,idif.exinstr[15:0]};
-	else if(hazard_mem_2 && !idif.exRegDst)
-	  aluif.Port_B = exif.memOutput_Port;
 	else
 	  begin
 	     if(idif.exinstr[15])
@@ -141,7 +142,7 @@ module datapath (
    assign exif.exinstr = idif.exinstr;
    
    assign exif.exOutput_Port = aluif.Output_Port;
-   assign exif.exrdat2 = idif.exrdat2;
+   assign exif.exrdat2 = hazard_mem_2 ? exif.memOutput_Port : idif.exrdat2;
 
    //Memory Cycle
    //FROM EX/MEM REG
@@ -193,9 +194,9 @@ module datapath (
    
    always_comb
      begin
-	if((exif.memcuDRE == 0 || exif.memcuDWE == 0) && !hzif.data_hazard)
+	if((exif.memcuDRE == 0 || exif.memcuDWE == 0))// && !hzif.data_hazard)
 	  pcWEN = dpif.ihit;
-	else if(cuif.cuHALT || hzif.data_hazard)
+	else if(cuif.cuHALT) // || hzif.data_hazard)
 	  pcWEN = 0;
 	else
 	  pcWEN = dpif.dhit && !cuif.cuHALT;
@@ -217,8 +218,8 @@ module datapath (
    //HANDLING DATA HAZARDS
     //assign hazard_wb_1 = ((ifif.idrsel1 == memif.wbwsel) && (memif.wbwsel != 5'd0)) ? 1 : 0;
     //assign hazard_wb_2 = ((ifif.idrsel2 == memif.wbwsel) && (memif.wbwsel != 5'd0)) ? 1 : 0;
-    assign hzif.hazard_mem_1 = ((idif.exrsel1 == exif.memwsel) && (exif.memwsel != 5'd0)) ? 1 : 0;
-    assign hzif.hazard_mem_2 = ((idif.exrsel2 == exif.memwsel) && (exif.memwsel != 5'd0)) ? 1 : 0;
+    assign hazard_mem_1 = ((idif.exrsel1 == exif.memwsel) && (exif.memwsel != 5'd0)) ? 1 : 0;
+    assign hazard_mem_2 = ((idif.exrsel2 == exif.memwsel) && (exif.memwsel != 5'd0)) ? 1 : 0;
     
     /*
    always_comb
