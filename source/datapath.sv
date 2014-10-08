@@ -143,7 +143,12 @@ module datapath (
 	       aluif.Port_B = exif.memOutput_Port;
 	  end
 	else if(hazard_wb_2 && exif.memRegDst)
-	  aluif.Port_B = memif.wbdmemload;
+	  begin
+	     if(memif.wbMemToReg)
+	       aluif.Port_B = memif.wbdmemload;
+	     else
+	       aluif.Port_B = memif.wbOutput_Port;
+	  end
 	else if(!idif.exALUsrc)
 	  aluif.Port_B = idif.exrdat2;
 	else if(!idif.exEXTop)
@@ -225,7 +230,7 @@ module datapath (
    
    always_comb
      begin
-	if((exif.memcuDRE == 0 || exif.memcuDWE == 0)) // && !hzif.data_hazard)
+	if((exif.memcuDRE == 0 || exif.memcuDWE == 0) && !cuif.jmp) // && !hzif.data_hazard)
 	  pcWEN = dpif.ihit;
 	else if(cuif.cuHALT) // || hzif.data_hazard)
 	  pcWEN = 0;

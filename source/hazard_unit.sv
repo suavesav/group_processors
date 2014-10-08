@@ -11,7 +11,7 @@ module hazard_unit
    
    always_comb
      begin
-	if((hzif.memcuDRE == 1 || hzif.memcuDWE == 1) && !hzif.dhit)
+	if((hzif.memcuDRE == 1 || hzif.memcuDWE == 1) && !hzif.dhit && !hzif.cujmp)
 	  begin
 	     hzif.ifW = 0;
 	     hzif.idW = 0;
