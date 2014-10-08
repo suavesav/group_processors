@@ -34,7 +34,7 @@ module datapath (
 
    //DEFINITIONS
    logic 		     pcWEN, Negative, Overflow, datomic = 0;
-   logic 		     hazard_mem_1, hazard_mem_2; //, hazard_wb_1, hazard_wb_2;
+   logic 		     hazard_mem_1, hazard_mem_2, hazard_wb_1, hazard_wb_2;
    word_t       iaddr, addr, temp_addr;
 
    //MODPORTS
@@ -119,6 +119,13 @@ module datapath (
 	     else
 	       aluif.Port_A = exif.memOutput_Port;
 	  end
+	else if(hazard_wb_1)
+	  begin
+	     if(memif.wbMemToReg)
+	       aluif.Port_A = memif.wbdmemload;
+	     else
+	       aluif.Port_A = memif.wbOutput_Port;
+	  end
 	else
 	  aluif.Port_A = idif.exrdat1;
      end // always_comb
@@ -129,7 +136,14 @@ module datapath (
 	if(idif.exSHIFTflag)
 	  aluif.Port_B = {27'd0,idif.exSHIFTval};
 	else if(hazard_mem_2 && idif.exRegDst)
-	  aluif.Port_B = exif.memOutput_Port;
+	  begin
+	     if(exif.memcuDRE)
+	       aluif.Port_B = dpif.dmemload;
+	     else
+	       aluif.Port_B = exif.memOutput_Port;
+	  end
+	else if(hazard_wb_2 && exif.memRegDst)
+	  aluif.Port_B = memif.wbdmemload;
 	else if(!idif.exALUsrc)
 	  aluif.Port_B = idif.exrdat2;
 	else if(!idif.exEXTop)
@@ -156,6 +170,7 @@ module datapath (
    assign exif.exWEN = idif.exWEN;
    assign exif.exLUIflag = idif.exLUIflag;
    assign exif.exinstr = idif.exinstr;
+   assign exif.exRegDst = idif.exRegDst;
    
    assign exif.exOutput_Port = aluif.Output_Port;
    assign exif.exrdat2 = hazard_mem_2 ? exif.memOutput_Port : idif.exrdat2;
@@ -210,9 +225,9 @@ module datapath (
    
    always_comb
      begin
-	if((exif.memcuDRE == 0 || exif.memcuDWE == 0) && !hzif.data_hazard)
+	if((exif.memcuDRE == 0 || exif.memcuDWE == 0)) // && !hzif.data_hazard)
 	  pcWEN = dpif.ihit;
-	else if(cuif.cuHALT || hzif.data_hazard)
+	else if(cuif.cuHALT) // || hzif.data_hazard)
 	  pcWEN = 0;
 	else
 	  pcWEN = dpif.dhit && !cuif.cuHALT;
@@ -232,12 +247,12 @@ module datapath (
      end
    
    //HANDLING DATA HAZARDS
-    //assign hazard_wb_1 = ((ifif.idrsel1 == memif.wbwsel) && (memif.wbwsel != 5'd0)) ? 1 : 0;
-    //assign hazard_wb_2 = ((ifif.idrsel2 == memif.wbwsel) && (memif.wbwsel != 5'd0)) ? 1 : 0;
+   assign hazard_wb_1 = ((idif.exrsel1 == memif.wbwsel) && (memif.wbwsel != 5'd0)) ? 1 : 0;
+   assign hazard_wb_2 = ((idif.exrsel2 == memif.wbwsel) && (memif.wbwsel != 5'd0)) ? 1 : 0;
    assign hazard_mem_1 = ((idif.exrsel1 == exif.memwsel) && (exif.memwsel != 5'd0)) ? 1 : 0;
    assign hazard_mem_2 = ((idif.exrsel2 == exif.memwsel) && (exif.memwsel != 5'd0)) ? 1 : 0;
    
-   assign hzif.data_hazard = ((idif.exrsel1 == exif.memwsel) && (idif.excuDRE)) ? 1 : 0;
+   //assign hzif.data_hazard = ((idif.exrsel1 == exif.memwsel) && (idif.excuDRE)) ? 1 : 0;
    
    
     /*

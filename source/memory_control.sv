@@ -92,8 +92,8 @@ module memory_control (
 	    end // case: ACCESS
 	  default:
 	    begin
-	       ccif.dwait[0] = 0;
-	       ccif.iwait[0] = 0;
+	       ccif.dwait[0] = 1;
+	       ccif.iwait[0] = 1;
 	    end
 	endcase // casez (ccif.ramstate)
      end // always_comb

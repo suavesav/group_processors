@@ -30,6 +30,8 @@ add wave -noupdate /system_tb/DUT/CPU/DP/hzif/val_brnch
 add wave -noupdate /system_tb/DUT/CPU/DP/hzif/data_hazard
 add wave -noupdate /system_tb/DUT/CPU/DP/hazard_mem_1
 add wave -noupdate /system_tb/DUT/CPU/DP/hazard_mem_2
+add wave -noupdate /system_tb/DUT/CPU/DP/hazard_wb_1
+add wave -noupdate /system_tb/DUT/CPU/DP/hazard_wb_2
 add wave -noupdate -divider PC
 add wave -noupdate /system_tb/DUT/CPU/DP/PC/CLK
 add wave -noupdate /system_tb/DUT/CPU/DP/PC/nRST
@@ -193,7 +195,7 @@ add wave -noupdate /system_tb/DUT/CPU/DP/dpif/dmemload
 add wave -noupdate /system_tb/DUT/CPU/DP/dpif/dmemstore
 add wave -noupdate /system_tb/DUT/CPU/DP/dpif/dmemaddr
 TreeUpdate [SetDefaultTree]
-WaveRestoreCursors {{Cursor 1} {43498 ps} 0}
+WaveRestoreCursors {{Cursor 1} {666104162 ps} 0}
 quietly wave cursor active 1
 configure wave -namecolwidth 150
 configure wave -valuecolwidth 100
@@ -209,4 +211,4 @@ configure wave -griddelta 40
 configure wave -timeline 0
 configure wave -timelineunits ns
 update
-WaveRestoreZoom {0 ps} {187622 ps}
+WaveRestoreZoom {665967949 ps} {666343193 ps}
