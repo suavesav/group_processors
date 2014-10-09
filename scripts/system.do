@@ -50,11 +50,14 @@ add wave -noupdate /system_tb/DUT/CPU/DP/ifif/idrsel2
 add wave -noupdate -divider {Reg File}
 add wave -noupdate /system_tb/DUT/CPU/DP/rfif/WEN
 add wave -noupdate /system_tb/DUT/CPU/DP/rfif/wsel
+add wave -noupdate /system_tb/DUT/CPU/DP/rfif/wdat
 add wave -noupdate /system_tb/DUT/CPU/DP/rfif/rsel1
 add wave -noupdate /system_tb/DUT/CPU/DP/rfif/rsel2
-add wave -noupdate /system_tb/DUT/CPU/DP/rfif/wdat
 add wave -noupdate /system_tb/DUT/CPU/DP/rfif/rdat1
 add wave -noupdate /system_tb/DUT/CPU/DP/rfif/rdat2
+add wave -noupdate /system_tb/DUT/CPU/DP/dpif/dmemWEN
+add wave -noupdate /system_tb/DUT/CPU/DP/dpif/dmemstore
+add wave -noupdate /system_tb/DUT/CPU/DP/dpif/dmemaddr
 add wave -noupdate -divider {Control Unit}
 add wave -noupdate /system_tb/DUT/CPU/DP/cuif/instr
 add wave -noupdate /system_tb/DUT/CPU/DP/cuif/WEN
@@ -171,7 +174,6 @@ add wave -noupdate /system_tb/DUT/CPU/DP/memif/memWEN
 add wave -noupdate /system_tb/DUT/CPU/DP/memif/memLUIflag
 add wave -noupdate /system_tb/DUT/CPU/DP/memif/memwsel
 add wave -noupdate /system_tb/DUT/CPU/DP/memif/memOutput_Port
-add wave -noupdate /system_tb/DUT/CPU/DP/memif/memrdat2
 add wave -noupdate /system_tb/DUT/CPU/DP/memif/memdmemload
 add wave -noupdate /system_tb/DUT/CPU/DP/memif/meminstr
 add wave -noupdate /system_tb/DUT/CPU/DP/memif/wbMemToReg
@@ -181,7 +183,6 @@ add wave -noupdate /system_tb/DUT/CPU/DP/memif/wbcuHALT
 add wave -noupdate /system_tb/DUT/CPU/DP/memif/wbwsel
 add wave -noupdate /system_tb/DUT/CPU/DP/memif/wbOutput_Port
 add wave -noupdate /system_tb/DUT/CPU/DP/memif/wbdmemload
-add wave -noupdate /system_tb/DUT/CPU/DP/memif/wbinstr
 add wave -noupdate /system_tb/DUT/CPU/DP/memif/wbLUIdata
 add wave -noupdate /system_tb/DUT/CPU/DP/dpif/halt
 add wave -noupdate /system_tb/DUT/CPU/DP/dpif/ihit
@@ -190,12 +191,9 @@ add wave -noupdate /system_tb/DUT/CPU/DP/dpif/imemload
 add wave -noupdate /system_tb/DUT/CPU/DP/dpif/imemaddr
 add wave -noupdate /system_tb/DUT/CPU/DP/dpif/dhit
 add wave -noupdate /system_tb/DUT/CPU/DP/dpif/dmemREN
-add wave -noupdate /system_tb/DUT/CPU/DP/dpif/dmemWEN
 add wave -noupdate /system_tb/DUT/CPU/DP/dpif/dmemload
-add wave -noupdate /system_tb/DUT/CPU/DP/dpif/dmemstore
-add wave -noupdate /system_tb/DUT/CPU/DP/dpif/dmemaddr
 TreeUpdate [SetDefaultTree]
-WaveRestoreCursors {{Cursor 1} {666104162 ps} 0}
+WaveRestoreCursors {{Cursor 1} {3458984 ps} 0}
 quietly wave cursor active 1
 configure wave -namecolwidth 150
 configure wave -valuecolwidth 100
@@ -211,4 +209,4 @@ configure wave -griddelta 40
 configure wave -timeline 0
 configure wave -timelineunits ns
 update
-WaveRestoreZoom {665967949 ps} {666343193 ps}
+WaveRestoreZoom {3344291 ps} {3719535 ps}
