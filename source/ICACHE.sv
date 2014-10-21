@@ -72,6 +72,3 @@ module ICACHE
    assign ccif.iaddr[0] = dcif.imemaddr;
 
 endmodule // ICACHE
-
-
-   
