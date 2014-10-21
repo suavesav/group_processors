@@ -4,8 +4,9 @@
 module ICACHE
    import cpu_types_pkg::*;
    (
-    cache_control_if.icache ccif,
-    datapath_cache_if.icache dcif
+    input logic CLK, nRST,
+    datapath_cache_if.icache dcif,
+    cache_control_if.icache ccif    
     );
    
    //INPUT VALUES
@@ -17,13 +18,11 @@ module ICACHE
    assign inputADDR = dcif.imemaddr;
    assign inTAG = inputADDR.tag;
    assign inINDEX = inputADDR.idx;
-      
-   logic 	    init = 1;
    
    //DATA STORE BLOCK
-   logic [25:0] storeTAG[3:0]; //ARRAY OF DATA STORE TAGS 
-   word_t storeDATA[3:0]; //ARRAY OF DATA STORE DATA
-   logic 	    storeVALID[3:0]; //ARRAY OF VALIDITY BITS
+   logic [25:0] storeTAG[15:0]; //ARRAY OF DATA STORE TAGS 
+   word_t storeDATA[15:0]; //ARRAY OF DATA STORE DATA
+   logic 	    storeVALID[15:0]; //ARRAY OF VALIDITY BITS
 
    //OUTPUT
    always_comb
@@ -37,54 +36,40 @@ module ICACHE
 	       end
 	     else
 	       begin
-		  dcif.imemload = ccif.iload;
-		  dcif.ihit = !ccif.iwait;
+		  dcif.imemload = ccif.iload[0];
+		  dcif.ihit = dcif.imemREN ? !ccif.iwait[0] : 0;
 	       end
 	  end
 	else
 	  begin
-	     dcif.imemload = ccif.iload;
-	     dcif.ihit = !ccif.iwait;
+	     dcif.imemload = ccif.iload[0];
+	     dcif.ihit = dcif.imemREN ? !ccif.iwait[0] : 0;
 	  end // else: !if(inTAG == storeTAG[inINDEX])
      end // always_comb
    
    //UPDATE DATA STORE
-   always_comb
+   always_ff @ (posedge CLK, negedge nRST)
      begin
-	if(init)
+	if(!nRST)
 	  begin
-	     storeTAG = '{default:0};
-	     storeDATA = '{default:0};
-	     storeVALID = '{default:0};
-	     init = 0;
+	     storeTAG <= '{default:0};
+	     storeDATA <= '{default:0};
+	     storeVALID <= '{default:0};
 	  end
 	else
 	  begin
-	     if(inTAG == storeTAG[inINDEX])
+	     if(inTAG != storeTAG[inINDEX])
 	       begin
-		  storeTAG[inINDEX] = storeTAG[inINDEX];
-		  storeDATA[inINDEX] = storeDATA[inINDEX];
-		  storeVALID[inINDEX] = 0;
-		  init = 0;
-	       end
-	     else
-	       begin
-		  storeTAG[inINDEX] = inTAG;
-		  storeDATA[inINDEX] = ccif.iload;
-		  storeVALID[inINDEX] = 1;
-		  init = 0;
+		  storeTAG[inINDEX] <= inTAG;
+		  storeDATA[inINDEX] <= ccif.iload[0];
+		  storeVALID[inINDEX] <= 1;
 	       end // else: !if(inTAG == storeTAG[inINDEX])
 	  end // else: !if(init)
      end // always_comb
-	       
-
-   //assign storeTAG[inINDEX] = (inTAG != storeTAG[inINDEX]) ? inTAG : storeTAG[inINDEX];
-   //assign storeDATA[inINDEX] = (inTAG != storeTAG[inINDEX]) ? ccif.iload : storeDATA[inINDEX];
-   //assign storeVALID[inINDEX] = (inTAG != storeTAG[inINDEX]) ? 1 : 0;
 
    //PASS THROUGH TO MEMORY CONTROL
-   assign ccif.iREN = dcif.ihit ? 0 : dcif.imemREN;
-   assign ccif.iaddr = dcif.imemaddr;
+   assign ccif.iREN[0] = dcif.ihit ? 0 : dcif.imemREN;
+   assign ccif.iaddr[0] = dcif.imemaddr;
 
 endmodule // ICACHE
 
