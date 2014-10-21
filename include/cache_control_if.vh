@@ -83,6 +83,14 @@ interface cache_control_if;
 	       input iload, iwait, dwait, dload, ramstore, ramaddr, ramREN, ramWEN,
 	       output iREN, iaddr, dstore, dREN, dWEN, daddr
 	       );
+
+   //ICACHE TB ADDED BY CHAD
+
+   modport itb (
+		input iREN, iaddr,
+		output iwait, iload
+		);
+   
    
 endinterface
 
