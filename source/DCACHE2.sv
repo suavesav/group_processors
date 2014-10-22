@@ -41,7 +41,7 @@ module DCACHE
    parameter [3:0] IDLE = 0, READ1 = 4'b0001, READ2 = 4'b0010, READM = 4'b0011;
    parameter [3:0] WRITE1 = 4'b0100, WRITE2 = 4'b0101, WRITEM = 4'b0110;
    parameter [3:0] READ1dirty = 4'b0111, READ1clean = 4'b1000, READ2dirty = 4'b1001, READ2clean = 4'b1010;
-   
+   parameter [3:0] 
 
    
    //STATE REGISTER
@@ -213,8 +213,21 @@ module DCACHE
 		    else
 		      nextstate = WRITE2clean;
 		 end 
-	    end 
-   
+	    end // case: WRITEM
+
+	  READ1clean:
+	    nextstate = READ1clean2;
+
+	  READ1clean2:
+	    nextstate = IDLE;
+
+	  READ2clean:
+	    nextstate = READ2clean2;
+
+	  READ2clean2:
+	    nextstate = IDLE;
+	     
+	  
 	    
 	       
 	    endcase // casez (state)
@@ -255,18 +268,33 @@ module DCACHE
 	  READM:
 	    begin
 	       dcif.dhit = 0;
-	       dcif.dREN = 1;
-	       ccif.daddr = dcif.dmemaddr;
+	       ccif.dREN = 1;
+	       if(!LRUon1[dINDEX])
+		 ccif.daddr = {storeTAG1[dINDEX],storeINDEX1[dINDEX],3'b000};
+	       else
+		 ccif.daddr = {storeTAG2[dINDEX],storeINDEX2[dINDEX],3'b000};
 	    end
 
 	  READ1dirty:
 	    begin
-	       
+	       storeTAG1[dINDEX] = dTAG;
+	       storeVALID1[dINDEX] = 1;
+	       storeDIRTY1[dINDEX] = 0;
+	       LRUon1[dINDEX] = 1;	       
+	       ccif.dREN = 1;
+	       ccif.daddr = {storeTAG1[dINDEX],storeINDEX1[dINDEX],3'b100} ;
+	       storeDATA1[dINDEX][31:0] = ccif.dload;
 	    end
 
 	  READ1clean:
-	    begin
-	       
+	    begin	       
+	       storeTAG1[dINDEX] = dTAG;
+	       storeVALID1[dINDEX] = 1;
+	       storeDIRTY1[dINDEX] = 0;
+	       LRUon1[dINDEX] = 1;	       
+	       ccif.dREN = 1;
+	       ccif.daddr = {storeTAG1[dINDEX],storeINDEX1[dINDEX],3'b100};
+	       storeDATA1[dINDEX][31:0] = ccif.dload;
 	    end
 	  
 	  READ2dirty:
@@ -275,4 +303,28 @@ module DCACHE
 
 	  READ2clean:
 	    begin
+	       storeDATA2[dINDEX][31:0] = ccif.dload;
+	       storeTAG2[dINDEX] = dTAG;
+	       storeVALID2[dINDEX] = 1;
+	       storeDIRTY2[dINDEX] = 0;
+	       LRUon1[dINDEX] = 0;
+	       ccif.daddr = dcif.dmemaddr + 4;
+	       ccif.dREN = 1;
+	       ccif.daddr = {storeTAG2[dINDEX],storeINDEX2[dINDEX],3'b100};
+	       storeDATA2[dINDEX][31:0] = ccif.dload;
 	    end
+
+	  READ1clean2: //DHIT SHOULD BE ASSERTED
+	    begin
+	       storeDATA1[dINDEX][63:32] = ccif.dload;
+	       ccif.daddr = '0;
+	       ccif.dREN = 0;
+	    end
+
+	  READ2clean2:
+	    begin
+	       storeDATA1[dINDEX][63:32] = ccif.dload;
+	       ccif.daddr = '0;
+	       ccif.dREN = 0;
+	    end
+	  
