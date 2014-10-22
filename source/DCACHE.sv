@@ -54,7 +54,6 @@ module DCACHE
 		       else
 			 storeDATA1[dINDEX][31:0] = dcif.dmemstore;
 		    end
-		  else
 		       
 	       end
 	     else
@@ -90,7 +89,7 @@ module DCACHE
 	  begin
 	     storeTAG1 <= '{default:0};
 	     storeTAG2 <= '{default:0};
-	     storeDATA1 <= '{default:0};
+	     //storeDATA1 <= '{default:0};
 	     storeDATA2 <= '{default:0};
 	     storeVALID1 <= '{default:0};
 	     storeVALID2 <= '{default:0};
