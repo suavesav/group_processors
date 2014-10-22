@@ -45,7 +45,17 @@ module DCACHE
 	     if(storeVALID1[dINDEX])
 	       begin
 		  dcif.dhit = 1;
-		  dcif.dmemload = doffset ? storeDATA1[dINDEX][63:32] : storeDATA1[dINDEX][31:0];		  
+		  if(dcif.dmemREN)
+		    dcif.dmemload = doffset ? storeDATA1[dINDEX][63:32] : storeDATA1[dINDEX][31:0];
+		  else if(dcif.dmemWEN)
+		    begin
+		       if(doffset)
+			 storeDATA1[dINDEX][63:32] = dcif.dmemstore;
+		       else
+			 storeDATA1[dINDEX][31:0] = dcif.dmemstore;
+		    end
+		  else
+		       
 	       end
 	     else
 	       begin
