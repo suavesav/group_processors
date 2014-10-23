@@ -20,8 +20,6 @@ module DCACHE
    assign dTAG = inputADDR.tag;
    assign dINDEX = inputADDR.idx;
    assign doffset = inputADDR.blkoff;
-   
-   logic 	init = 1;
 
    //DATA STORE BLOCKS
    logic [25:0] storeTAG1[7:0];
@@ -412,3 +410,5 @@ module DCACHE
    
    
 endmodule // DCACHE
+
+//SET DSTORE OUTSIDE SO NO LATCH

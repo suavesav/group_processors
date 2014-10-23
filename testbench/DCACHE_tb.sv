@@ -31,12 +31,21 @@ module DCACHE_tb;
 	      .\dcif.dmemWEN (dcif.dmemWEN),
 	      .\dcif.dmemstore (dcif.dmemstore),
 	      .\dcif.dmemload (dcif.dmemload),
+	      .\dcif.dmemaddr (dcif.dmemaddr),
 	      .\dcif.dhit (dcif.dhit),
+	      .\dcif.datomic (dcif.datomic),
+	      .\dcif.flushed (dcif.flushed),
 	      .\ccif.dload (ccif.dload),
 	      .\ccif.dREN (ccif.dREN),
 	      .\ccif.dWEN (ccif.dWEN),
 	      .\ccif.daddr (ccif.daddr),
 	      .\ccif.dstore (ccif.dstore),
+	      .\ccif.dwait (ccif.dwait),
+	      .\ccif.ccwait (ccif.ccwait),
+	      .\ccif.ccinv (ccif.ccinv),
+	      .\ccif.ccsnoopaddr (ccif.ccsnoopaddr),
+	      .\ccif.ccwrite (ccif.ccwrite),
+	      .\ccif.cctrans (ccif.cctrans),
 	      .\nRST (nRST),
 	      .\CLK (CLK)
 	      );
@@ -52,10 +61,12 @@ program test(input logic CLK, output logic nRST, datapath_cache_if.dtb dcif, cac
 	dcif.halt = 0;
 	dcif.dmemREN = 0;
 	dcif.dmemWEN = 0;
-	dcif.dmemstore = 0;
-	dcif.dmemaddr = 0;
+	dcif.dmemstore = '0;
+	dcif.dmemaddr = '0;
 	ccif.dwait = 1;
-	ccif.dload[0] = 0;
+	ccif.dload[0] = 32'd0;
+	ccif.dload[1] = 32'd0;
+	
 
 	//LOAD A VALUE OFFSET 0
 	@(posedge CLK);
@@ -67,8 +78,8 @@ program test(input logic CLK, output logic nRST, datapath_cache_if.dtb dcif, cac
 
 	@(posedge CLK);
 	@(posedge CLK);
-	@(posedge CLK);
 	ccif.dload[0] = 32'hDEADBEEF;
+	@(posedge CLK);
 	@(posedge CLK);
 	@(posedge CLK);
 
@@ -79,8 +90,8 @@ program test(input logic CLK, output logic nRST, datapath_cache_if.dtb dcif, cac
 
 	@(posedge CLK);
 	@(posedge CLK);
-	@(posedge CLK);
 	ccif.dload[0] = 32'hDEADDEAD;
+	@(posedge CLK);
 	@(posedge CLK);
 	@(posedge CLK);
 
@@ -91,8 +102,8 @@ program test(input logic CLK, output logic nRST, datapath_cache_if.dtb dcif, cac
 
 	@(posedge CLK);
 	@(posedge CLK);
-	@(posedge CLK);
 	ccif.dload[0] = 32'hBEEFFEED;
+	@(posedge CLK);
 	@(posedge CLK);
 	@(posedge CLK);
 
@@ -104,8 +115,6 @@ program test(input logic CLK, output logic nRST, datapath_cache_if.dtb dcif, cac
 	@(posedge CLK);
 	dcif.dmemaddr = 32'd0;
 	dcif.dmemREN = 0;
-	@(posedge CLK);
-	@(posedge CLK);
 	ccif.dload[0] = 32'hFACDFACE;
 	@(posedge CLK);
 	@(posedge CLK);
@@ -119,8 +128,8 @@ program test(input logic CLK, output logic nRST, datapath_cache_if.dtb dcif, cac
 	
 	@(posedge CLK);
 	@(posedge CLK);
-	@(posedge CLK);
 	ccif.dload[0] = 32'hAAAAAAAA;
+	@(posedge CLK);
 	@(posedge CLK);
 	@(posedge CLK);
 
@@ -131,8 +140,8 @@ program test(input logic CLK, output logic nRST, datapath_cache_if.dtb dcif, cac
 	
 	@(posedge CLK);
 	@(posedge CLK);
-	@(posedge CLK);
 	ccif.dload[0] = 32'hFACADE44;
+	@(posedge CLK);
 	@(posedge CLK);
 	@(posedge CLK);
 
@@ -144,9 +153,9 @@ program test(input logic CLK, output logic nRST, datapath_cache_if.dtb dcif, cac
 	@(posedge CLK);
 	@(posedge CLK);
 	@(posedge CLK);
-	@(posedge CLK);
 	ccif.dload[0] = 32'h19922014;
 	dcif.dmemWEN = 0;
+	@(posedge CLK);	
 	@(posedge CLK);	
 	@(posedge CLK);
 	@(posedge CLK);
@@ -160,8 +169,8 @@ program test(input logic CLK, output logic nRST, datapath_cache_if.dtb dcif, cac
 	@(posedge CLK);
 	@(posedge CLK);
 	@(posedge CLK);
-	@(posedge CLK);
 	ccif.dload[0] = 32'h7A554073;
+	@(posedge CLK);
 	@(posedge CLK);
 	@(posedge CLK);
 	

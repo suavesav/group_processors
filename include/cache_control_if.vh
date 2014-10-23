@@ -92,8 +92,8 @@ interface cache_control_if;
 		);
 
    modport dtb (
-		input dREN, dWEN, daddr, dstore,
-		output dwait, dload
+		input dREN, dWEN, daddr, dstore, ccwrite, cctrans,
+		output dwait, dload, ccwait, ccinv, ccsnoopaddr
 		);
    
    
