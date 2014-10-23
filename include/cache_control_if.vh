@@ -90,6 +90,12 @@ interface cache_control_if;
 		input iREN, iaddr,
 		output iwait, iload
 		);
+
+   modport dtb (
+		input dREN, dWEN, daddr, dstore,
+		output dwait, dload
+		);
+   
    
    
 endinterface

@@ -68,6 +68,12 @@ interface datapath_cache_if;
 		input ihit, imemload,
 		output imemREN, imemaddr
 		);
+
+   modport dtb (
+		input dhit, dmemload,
+		output dmemREN, dmemWEN, dmemstore, dmemaddr
+		);
+   
    
 endinterface
 

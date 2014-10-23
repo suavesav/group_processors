@@ -6,7 +6,7 @@ module DCACHE
    (
     input logic CLK, nRST,
     datapath_cache_if.dcache dcif,
-    cache_control_if.icache ccif
+    cache_control_if.dcache ccif
     );
    
    //INPUT VALUES
@@ -36,21 +36,51 @@ module DCACHE
    logic 	storeVALID2[7:0];
    logic 	storeDIRTY2[7:0];
 
-   logic [3:0] 	state, nextstate;
+   logic [25:0] nxt_storeTAG1[7:0];
+   logic [63:0] nxt_storeDATA1[7:0];
+   logic 	nxt_storeVALID1[7:0];
+   logic 	nxt_storeDIRTY1[7:0];
+   logic 	nxt_LRUon1[7:0];
+ 	
    
-   parameter [3:0] IDLE = 0, READ1 = 4'b0001, READ2 = 4'b0010, READM = 4'b0011;
-   //parameter [3:0] WRITE1 = 4'b0100, WRITE2 = 4'b0101, WRITEM = 4'b0110;
-   parameter [3:0] READ1dirty = 4'b0111, READ1clean = 4'b1000, READ2dirty = 4'b1001, READ2clean = 4'b1010;
-   parameter [3:0] READ1dirty2 = 4'b1100, READ2dirty2 = 4'b1101, READ1clean2 = 4'b1110, READ2clean2 = 4'b1111;
+   logic [25:0] nxt_storeTAG2[7:0];
+   logic [63:0] nxt_storeDATA2[7:0];
+   logic 	nxt_storeVALID2[7:0];
+   logic 	nxt_storeDIRTY2[7:0];
+
+   typedef enum logic [4:0] {IDLE, READ1, READ2, READM, dirty1, READ1clean, dirty2, READ2clean, dirty1_2, dirty2_2, READ1clean2, READ2clean2, LOAD, WRITEM, WRITE1clean, WRITE2clean, WRITE1clean2, WRITE2clean2} STATE;
    
+   STATE 	state, nextstate;
    
    //STATE REGISTER
    always_ff @ (posedge CLK, negedge nRST)
      begin
 	if(!nRST)
-	  state <= IDLE;
+	  begin
+	     state <= IDLE;
+	     storeDATA1 <= '{default:0};
+	     storeDATA2 <= '{default:0};
+	     storeVALID1 <= '{default:0};
+	     storeVALID2 <= '{default:0};
+	     storeTAG1 <= '{default:0};
+	     storeTAG2 <= '{default:0};
+	     storeDIRTY1 <= '{default:0};
+	     storeDIRTY2 <= '{default:0};
+	     LRUon1 <= '{default:0};
+	  end
 	else
-	  state <= nextstate;
+	  begin
+	     state <= nextstate;
+	     storeDATA1[dINDEX] <= nxt_storeDATA1[dINDEX];
+	     storeDATA2[dINDEX] <= nxt_storeDATA2[dINDEX];
+	     storeVALID1[dINDEX] <= nxt_storeVALID1[dINDEX];
+	     storeVALID2[dINDEX] <= nxt_storeVALID2[dINDEX];
+	     storeTAG1[dINDEX] <= nxt_storeTAG1[dINDEX];
+	     storeTAG2[dINDEX] <= nxt_storeTAG2[dINDEX];
+	     storeDIRTY1[dINDEX] <= nxt_storeDIRTY1[dINDEX];
+	     storeDIRTY2[dINDEX] <= nxt_storeDIRTY2[dINDEX];
+	     LRUon1[dINDEX] <= nxt_LRUon1[dINDEX];
+	  end
      end
 
    //NEXT STATE LOGIC
@@ -63,119 +93,47 @@ module DCACHE
 	    begin
 	       if(dcif.dmemREN)
 		 begin
-		    if(dTAG == storeTAG1[dINDEX] && storeVALID1[dINDEX])
-		      nextstate = READ1;
-		    else if(dTAG = storeTAG2[dINDEX] && storeVALID2[dINDEX])
-		      nextstate = READ2;
-		    else
+		    if((dTAG != storeTAG1[dINDEX] || !storeVALID1[dINDEX]) && (dTAG != storeTAG2[dINDEX] || !storeVALID2[dINDEX])) 
 		      begin
 			 if(!LRUon1[dINDEX])
 			   begin
 			      if(storeDIRTY1[dINDEX])
-				nextstate = READ1dirty;
+				nextstate = dirty1;
 			      else
 				nextstate = READM;
 			   end
 			 else
 			   begin
 			      if(storeDIRTY2[dINDEX])
-				nextstate = READ2dirty;
+				nextstate = dirty2;
 			      else
 				nextstate = READM;
 			   end // else: !if(!LRUon1[dINDEX])
 		      end
 		 end
-	       /*else if(dcif.dmemWEN)
+	       else if(dcif.dmemWEN)
 		 begin
-		    if(dTAG == storeTAG1[dINDEX] && storeVALID1[dINDEX])
-		      nextstate = WRITE1;
-		    else if(dTAG == storeTAG2[dINDEX] && storeVALID2[dINDEX])
-		      nextstate = WRITE2;
-		    else
-		      nextstate = WRITEM;
-		 end*/
+		    if((dTAG != storeTAG1[dINDEX] || !storeVALID1[dINDEX]) && (dTAG != storeTAG2[dINDEX] || !storeVALID2[dINDEX]))
+		      begin
+			 if(!LRUon1[dINDEX])
+			   begin
+			      if(storeDIRTY1[dINDEX])
+				nextstate = dirty1;
+			      else
+				nextstate = WRITEM;
+			   end
+			 else
+			   begin
+			      if(storeDIRTY2[dINDEX])
+				nextstate = dirty2;
+			      else
+				nextstate = WRITEM;
+			   end // else: !if(!LRUon1[dINDEX])
+		      end			       
+		 end // if (dcif.dmemWEN)
 	       else
 		 nextstate = IDLE;
 	    end // case: IDLE
-	  
-	  READ1:
-	    begin
-	       if(dcif.dmemREN)
-		 begin
-		    if(dTAG == storeTAG1[dINDEX] && storeVALID1[dINDEX])
-		      nextstate = READ1;
-		    else if(dTAG = storeTAG2[dINDEX] && storeVALID2[dINDEX])
-		      nextstate = READ2;
-		    else
-		      begin
-			 if(!LRUon1[dINDEX])
-			   begin
-			      if(storeDIRTY1[dINDEX])
-				nextstate = READ1dirty;
-			      else
-				nextstate = READM;
-			   end
-			 else
-			   begin
-			      if(storeDIRTY2[dINDEX])
-				nextstate = READ2dirty;
-			      else
-				nextstate = READM;
-			   end // else: !if(!LRUon1[dINDEX])
-		      end
-		 end
-	       /*else if(dcif.dmemWEN)
-		 begin
-		    if(dTAG == storeTAG1[dINDEX] && storeVALID1[dINDEX])
-		      nextstate = WRITE1;
-		    else if(dTAG == storeTAG2[dINDEX] && storeVALID2[dINDEX])
-		      nextstate = WRITE2;
-		    else
-		      nextstate = WRITEM;
-		 end*/
-	       else
-		 nextstate = IDLE;
-	    end // case: READ1
-
-	  READ2:
-	    begin
-	       if(dcif.dmemREN)
-		 begin
-		    if(dTAG == storeTAG1[dINDEX] && storeVALID1[dINDEX])
-		      nextstate = READ1;
-		    else if(dTAG = storeTAG2[dINDEX] && storeVALID2[dINDEX])
-		      nextstate = READ2;
-		    else
-		      begin
-			 if(!LRUon1[dINDEX])
-			   begin
-			      if(storeDIRTY1[dINDEX])
-				nextstate = READ1dirty;
-			      else
-				nextstate = READM;
-			   end
-			 else
-			   begin
-			      if(storeDIRTY2[dINDEX])
-				nextstate = READ2dirty;
-			      else
-				nextstate = READM;
-			   end
-		      end // else: !if(dTAG = storeTAG2[dINDEX] && storeVALID2[dINDEX])
-		 end
-	       /*else if(dcif.dmemWEN)
-		 begin
-		    if(dTAG == storeTAG1[dINDEX] && storeVALID1[dINDEX])
-		      nextstate = WRITE1;
-		    else if(dTAG == storeTAG2[dINDEX] && storeVALID2[dINDEX])
-		      nextstate = WRITE2;
-		    else
-		      nextstate = WRITEM;
-		 end*/   
-	       else
-		 nextstate = IDLE;
-	    end // case: READ2
-
 
 	  READM:
 	    begin
@@ -189,27 +147,58 @@ module DCACHE
 	    nextstate = READ1clean2;
 
 	  READ1clean2:
-	    nextstate = IDLE;
+	    nextstate = LOAD;
 
 	  READ2clean:
 	    nextstate = READ2clean2;
 
 	  READ2clean2:
-	    nextstate = IDLE;
+	    nextstate = LOAD;
 
-	  READ1dirty:
-	    nextstate = READ1dirty2;
+	  WRITEM:
+	    begin
+	       if(!LRUon1[dINDEX])
+		 nextstate = WRITE1clean;
+	       else
+		 nextstate = WRITE2clean;
+	    end
+
+	  WRITE1clean:
+	    nextstate = WRITE1clean2;
+
+	  WRITE1clean2:
+	    nextstate = LOAD;
+
+	  WRITE2clean:
+	    nextstate = WRITE2clean2;
 	  
-	  READ2dirty:
-	    nextstate = READ2dirty2;
+	  WRITE2clean2:
+	    nextstate = LOAD;
 	  
-	  READ1dirty2:
-	    nextstate = READM;
+	  dirty1:
+	    nextstate = dirty1_2;
 	  
-	  READ2dirty2:
-	    nextstate = READM;
-	    
-	    
+	  dirty2:
+	    nextstate = dirty2_2;
+	  
+	  dirty1_2:
+	    begin
+	       if(dcif.dmemREN)
+		 nextstate = READM;
+	       else
+		 nextstate = WRITEM;
+	    end
+	  	  
+	  dirty2_2:
+	    begin
+	       if(dcif.dmemREN)
+		 nextstate = READM;
+	       else
+		 nextstate = WRITEM;
+	    end
+
+	  LOAD:
+	    nextstate = IDLE;	    
 	       
 	    endcase // casez (state)
      end // always_comb
@@ -220,127 +209,167 @@ module DCACHE
 	ccif.dREN = 0;
 	ccif.dWEN = 0;
 	ccif.daddr = '0;
-	storeDATA1[dINDEX] = storeDATA1[dINDEX];
-	storeDATA2[dINDEX] = storeDATA2[dINDEX];
-	storeVALID1[dINDEX] = storeVALID1[dINDEX];
-	storeVALID2[dINDEX] = storeVALID2[dINDEX];
-	storeTAG1[dINDEX] = storeTAG1[dINDEX];
-	storeTAG2[dINDEX] = storeTAG2[dINDEX];
-	storeDIRTY1[dINDEX] = storeDIRTY1[dINDEX];
-	storeDIRTY2[dINDEX] = storeDIRTY2[dINDEX];
-	LRUon1[dINDEX] = LRUon1[dINDEX];
+	nxt_storeDATA1[dINDEX] = storeDATA1[dINDEX];
+	nxt_storeDATA2[dINDEX] = storeDATA2[dINDEX];
+	nxt_storeVALID1[dINDEX] = storeVALID1[dINDEX];
+	nxt_storeVALID2[dINDEX] = storeVALID2[dINDEX];
+	nxt_storeTAG1[dINDEX] = storeTAG1[dINDEX];
+	nxt_storeTAG2[dINDEX] = storeTAG2[dINDEX];
+	nxt_storeDIRTY1[dINDEX] = storeDIRTY1[dINDEX];
+	nxt_storeDIRTY2[dINDEX] = storeDIRTY2[dINDEX];
+	nxt_LRUon1[dINDEX] = LRUon1[dINDEX];
 		
 	casez(state)
-	  /*READ1:
-	    begin
-	       dcif.dhit = 1;
-	       dcif.dmemload = doffset ? storeDATA1[dINDEX][63:32] : storeDATA1[dINDEX][31:0];
-	    end
-	  
-	  READ2:
-	    begin
-	       dcif.dhit = 1;
-	       dcif.dmemload = doffset ? storeDATA2[dINDEX][63:32] : storeDATA2[dINDEX][31:0];
-	    end*/
-
 	  READM:
 	    begin
 	       ccif.dREN = 1;
 	       if(!LRUon1[dINDEX])
-		 ccif.daddr = {storeTAG1[dINDEX],storeINDEX1[dINDEX],3'b000};
+		 ccif.daddr = {storeTAG1[dINDEX],dINDEX,3'b000};
 	       else
-		 ccif.daddr = {storeTAG2[dINDEX],storeINDEX2[dINDEX],3'b000};
+		 ccif.daddr = {storeTAG2[dINDEX],dINDEX,3'b000};
 	    end
 
 	  READ1clean:
 	    begin	       
-	       /*storeTAG1[dINDEX] = dTAG;
-	       storeVALID1[dINDEX] = 1;
-	       storeDIRTY1[dINDEX] = 0;
-	       LRUon1[dINDEX] = 1;*/	       
 	       ccif.dREN = 1;
-	       ccif.daddr = {storeTAG1[dINDEX],storeINDEX1[dINDEX],3'b100};
-	       storeDATA1[dINDEX][31:0] = ccif.dload;
+	       ccif.daddr = {storeTAG1[dINDEX],dINDEX,3'b100};
+	       nxt_storeDATA1[dINDEX][31:0] = ccif.dload;
 	    end
 
 	  READ1clean2: //DHIT SHOULD BE ASSERTED
 	    begin
-	       storeTAG1[dINDEX] = dTAG;
-	       storeVALID1[dINDEX] = 1;
-	       storeDIRTY1[dINDEX] = 0;
-	       LRUon1[dINDEX] = 1;
-	       storeDATA1[dINDEX][63:32] = ccif.dload;
+	       nxt_storeTAG1[dINDEX] = dTAG;
+	       nxt_storeVALID1[dINDEX] = 1;
+	       nxt_storeDIRTY1[dINDEX] = 0;
+	       nxt_LRUon1[dINDEX] = 1;
+	       nxt_storeDATA1[dINDEX][63:32] = ccif.dload;
 	       ccif.daddr = '0;
 	       ccif.dREN = 0;
 	    end
 
 	  READ2clean:
 	    begin
-	       storeDATA2[dINDEX][31:0] = ccif.dload;
-	       storeTAG2[dINDEX] = dTAG;
-	       storeVALID2[dINDEX] = 1;
-	       storeDIRTY2[dINDEX] = 0;
-	       LRUon1[dINDEX] = 0;
-	       ccif.daddr = dcif.dmemaddr + 4;
 	       ccif.dREN = 1;
-	       ccif.daddr = {storeTAG2[dINDEX],storeINDEX2[dINDEX],3'b100};
-	       storeDATA2[dINDEX][31:0] = ccif.dload;
+	       ccif.daddr = {storeTAG2[dINDEX],dINDEX,3'b100};
+	       nxt_storeDATA2[dINDEX][31:0] = ccif.dload;
 	    end // case: READ2clean
 
 	  READ2clean2: //DHIT should be asserted
 	    begin
-	       storeDATA1[dINDEX][63:32] = ccif.dload;
+	       nxt_storeTAG2[dINDEX] = dTAG;
+	       nxt_storeVALID2[dINDEX] = 1;
+	       nxt_storeDIRTY2[dINDEX] = 0;
+	       nxt_LRUon1[dINDEX] = 0;
+	       nxt_storeDATA2[dINDEX][63:32] = ccif.dload;
 	       ccif.daddr = '0;
 	       ccif.dREN = 0;
 	    end
-	    
-	  READ1dirty:
+
+	  WRITE1clean:
+	    begin
+	       if(doffset)
+		 begin
+		    nxt_storeDATA1[dINDEX][63:32] = dcif.dmemstore;
+		    ccif.daddr = {storeTAG1[dINDEX],dINDEX,3'b000};
+		 end
+	       else
+		 begin
+		    nxt_storeDATA1[dINDEX][31:0] = dcif.dmemstore;
+		    ccif.daddr = {storeTAG1[dINDEX],dINDEX,3'b100};
+		 end
+	       ccif.dREN = 1;
+	    end // case: WRITE1clean
+
+	  WRITE1clean2:
+	    begin
+	       if(doffset)
+	     	 nxt_storeDATA1[dINDEX][31:0] = ccif.dload;
+	       else
+		 nxt_storeDATA1[dINDEX][63:32] = ccif.dload;
+	       nxt_storeTAG1[dINDEX] = dTAG;
+	       nxt_storeVALID1[dINDEX] = 1;
+	       nxt_storeDIRTY1[dINDEX] = 1;
+	       nxt_LRUon1[dINDEX] = 1;
+	       ccif.daddr = 0;
+	       ccif.dREN = 0;
+	    end
+
+	  WRITE2clean:
+	    begin
+	       if(doffset)
+		 begin
+		    nxt_storeDATA2[dINDEX][63:32] = dcif.dmemstore;
+		    ccif.daddr = {storeTAG2[dINDEX],dINDEX,3'b000};
+		 end
+	       else
+		 begin
+		    nxt_storeDATA2[dINDEX][31:0] = dcif.dmemstore;
+		    ccif.daddr = {storeTAG2[dINDEX],dINDEX,3'b100};
+		 end
+	       ccif.dREN = 1;
+	    end // case: WRITE1clean
+
+	  WRITE2clean2:
+	    begin
+	       if(doffset)
+	     	 nxt_storeDATA2[dINDEX][31:0] = ccif.dload;
+	       else
+		 nxt_storeDATA2[dINDEX][63:32] = ccif.dload;
+	       nxt_storeTAG2[dINDEX] = dTAG;
+	       nxt_storeVALID2[dINDEX] = 1;
+	       nxt_storeDIRTY2[dINDEX] = 1;
+	       nxt_LRUon1[dINDEX] = 0;
+	       ccif.daddr = 0;
+	       ccif.dREN = 0;
+	    end
+	  
+	  dirty1:
 	    begin
 	       ccif.dWEN = 1;
-	       ccif.daddr = {storeTAG1[dINDEX],storeINDEX1[dINDEX],3'b000};
+	       ccif.daddr = {storeTAG1[dINDEX],dINDEX,3'b000};
 	       ccif.dstore = storeDATA1[dINDEX][31:0];
 	    end
 
-	  READ1dirty2:
+	  dirty1_2:
 	    begin
 	       ccif.dWEN = 1;
-	       ccif.daddr = {storeTAG1[dINDEX],storeINDEX1[dINDEX],3'b100};
-	       ccif.dstore = storeDATA2[dINDEX][63:32];
-	       storeDIRTY1[dINDEX] = 0;
+	       ccif.daddr = {storeTAG1[dINDEX],dINDEX,3'b100};
+	       ccif.dstore = storeDATA1[dINDEX][63:32];
+	       nxt_storeDIRTY1[dINDEX] = 0;
 	    end
 	  
-	  READ2dirty:
+	  dirty2:
 	    begin
 	       ccif.dWEN = 1;
-	       ccif.daddr = {storeTAG2[dINDEX],storeINDEX2[dINDEX],3'b000};
+	       ccif.daddr = {storeTAG2[dINDEX],dINDEX,3'b000};
 	       ccif.dstore = storeDATA2[dINDEX][31:0];
 	    end	  
 
-	  READ2dirty2:
+	  dirty2_2:
 	    begin
 	       ccif.dWEN = 1;
-	       ccif.daddr = {storeTAG2[dINDEX],storeINDEX2[dINDEX],3'b100};
+	       ccif.daddr = {storeTAG2[dINDEX],dINDEX,3'b100};
 	       ccif.dstore = storeDATA2[dINDEX][63:32];
-	       storeDIRTY2[dINDEX] = 0;
+	       nxt_storeDIRTY2[dINDEX] = 0;
 	    end
-	  
-	end // always_comb
+	endcase // casez (state)
+     end // always_comb
    
    //ASYNCHRONOUS OUTPUT
    always_comb
      begin
-	if(dTAG == storeTAG1[dINDEX])
+	if(dTAG == storeTAG1[dINDEX] && storeVALID1[dINDEX])
 	  begin
 	     dcif.dhit = 1;
-	     if(offset)
+	     if(doffset)
 	       dcif.dmemload = storeDATA1[dINDEX][63:32];
 	     else
 	       dcif.dmemload = storeDATA1[dINDEX][31:0];
 	  end
-	else if(dTAG == storeTAG2[dINDEX])
+	else if(dTAG == storeTAG2[dINDEX] && storeVALID2[dINDEX])
 	  begin
 	     dcif.dhit = 1;
-	     if(offset)
+	     if(doffset)
 	       dcif.dmemload = storeDATA2[dINDEX][63:32];
 	     else
 	       dcif.dmemload = storeDATA2[dINDEX][31:0];
