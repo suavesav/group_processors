@@ -48,7 +48,11 @@ module DCACHE
    logic 	nxt_storeVALID2[7:0];
    logic 	nxt_storeDIRTY2[7:0];
 
-   typedef enum logic [4:0] {IDLE, READ1, READ2, READM, dirty1, READ1clean, dirty2, READ2clean, dirty1_2, dirty2_2, READ1clean2, READ2clean2, LOAD, WRITEM, WRITE1clean, WRITE2clean, WRITE1clean2, WRITE2clean2} STATE;
+   word_t HITcount;
+   word_t nxt_HITcount;
+   
+
+   typedef enum logic [4:0] {IDLE, READ1, READ2, READM, dirty1, READ1clean, dirty2, READ2clean, dirty1_2, dirty2_2, READ1clean2, READ2clean2, LOAD, WRITEM, WRITE1clean, WRITE2clean, WRITE1clean2, WRITE2clean2, HALTstate} STATE;
    
    STATE 	state, nextstate;
    
@@ -67,19 +71,21 @@ module DCACHE
 	     storeDIRTY1 <= '{default:0};
 	     storeDIRTY2 <= '{default:0};
 	     LRUon1 <= '{default:0};
+	     HITcount <= '0;
 	  end
 	else
 	  begin
 	     state <= nextstate;
-	     storeDATA1[dINDEX] <= nxt_storeDATA1[dINDEX];
-	     storeDATA2[dINDEX] <= nxt_storeDATA2[dINDEX];
-	     storeVALID1[dINDEX] <= nxt_storeVALID1[dINDEX];
-	     storeVALID2[dINDEX] <= nxt_storeVALID2[dINDEX];
-	     storeTAG1[dINDEX] <= nxt_storeTAG1[dINDEX];
-	     storeTAG2[dINDEX] <= nxt_storeTAG2[dINDEX];
-	     storeDIRTY1[dINDEX] <= nxt_storeDIRTY1[dINDEX];
-	     storeDIRTY2[dINDEX] <= nxt_storeDIRTY2[dINDEX];
-	     LRUon1[dINDEX] <= nxt_LRUon1[dINDEX];
+	     storeDATA1 <= nxt_storeDATA1;
+	     storeDATA2 <= nxt_storeDATA2;
+	     storeVALID1 <= nxt_storeVALID1;
+	     storeVALID2 <= nxt_storeVALID2;
+	     storeTAG1 <= nxt_storeTAG1;
+	     storeTAG2 <= nxt_storeTAG2;
+	     storeDIRTY1 <= nxt_storeDIRTY1;
+	     storeDIRTY2 <= nxt_storeDIRTY2;
+	     LRUon1 <= nxt_LRUon1;
+	     HITcount <= nxt_HITcount;
 	  end
      end
 
@@ -131,6 +137,8 @@ module DCACHE
 			   end // else: !if(!LRUon1[dINDEX])
 		      end			       
 		 end // if (dcif.dmemWEN)
+	       else if(dcif.halt)
+		 nextstate = HALTstate;
 	       else
 		 nextstate = IDLE;
 	    end // case: IDLE
@@ -142,16 +150,16 @@ module DCACHE
 	       else
 		 nextstate = READ2clean;
 	    end
-
+	  
 	  READ1clean:
 	    nextstate = READ1clean2;
 
 	  READ1clean2:
 	    nextstate = LOAD;
-
+	  
 	  READ2clean:
 	    nextstate = READ2clean2;
-
+	  
 	  READ2clean2:
 	    nextstate = LOAD;
 
@@ -198,42 +206,52 @@ module DCACHE
 	    end
 
 	  LOAD:
-	    nextstate = IDLE;	    
-	       
-	    endcase // casez (state)
+	    nextstate = IDLE;
+   	  
+	  HALTstate:
+	    nextstate = HALTstate;
+
+	endcase // casez (state)
      end // always_comb
 
    //OUTPUT LOGIC
    always_comb
      begin
-	ccif.dREN = 0;
-	ccif.dWEN = 0;
-	ccif.daddr = '0;
-	nxt_storeDATA1[dINDEX] = storeDATA1[dINDEX];
-	nxt_storeDATA2[dINDEX] = storeDATA2[dINDEX];
-	nxt_storeVALID1[dINDEX] = storeVALID1[dINDEX];
-	nxt_storeVALID2[dINDEX] = storeVALID2[dINDEX];
-	nxt_storeTAG1[dINDEX] = storeTAG1[dINDEX];
-	nxt_storeTAG2[dINDEX] = storeTAG2[dINDEX];
-	nxt_storeDIRTY1[dINDEX] = storeDIRTY1[dINDEX];
-	nxt_storeDIRTY2[dINDEX] = storeDIRTY2[dINDEX];
-	nxt_LRUon1[dINDEX] = LRUon1[dINDEX];
-		
+	ccif.dREN[0] = 0;
+	ccif.dWEN[0] = 0;
+	ccif.daddr[0] = '0;
+	nxt_storeDATA1 = storeDATA1;
+	nxt_storeDATA2 = storeDATA2;
+	nxt_storeVALID1 = storeVALID1;
+	nxt_storeVALID2 = storeVALID2;
+	nxt_storeTAG1 = storeTAG1;
+	nxt_storeTAG2 = storeTAG2;
+	nxt_storeDIRTY1 = storeDIRTY1;
+	nxt_storeDIRTY2 = storeDIRTY2;
+	nxt_LRUon1 = LRUon1;
+	nxt_HITcount = HITcount;
+	
 	casez(state)
+	  IDLE:
+	    begin
+	       if((dTAG == storeTAG1[dINDEX] && storeVALID1[dINDEX]) || (dTAG == storeTAG2[dINDEX] && storeVALID2[dINDEX]))
+		 nxt_HITcount = HITcount + 1;
+	    end
+	  
 	  READM:
 	    begin
-	       ccif.dREN = 1;
+	       ccif.dREN[0] = 1;
 	       if(!LRUon1[dINDEX])
-		 ccif.daddr = {storeTAG1[dINDEX],dINDEX,3'b000};
+		 ccif.daddr[0] = {storeTAG1[dINDEX],dINDEX,3'b000};
 	       else
-		 ccif.daddr = {storeTAG2[dINDEX],dINDEX,3'b000};
+		 ccif.daddr[0] = {storeTAG2[dINDEX],dINDEX,3'b000};
 	    end
 
 	  READ1clean:
 	    begin	       
-	       ccif.dREN = 1;
-	       ccif.daddr = {storeTAG1[dINDEX],dINDEX,3'b100};
-	       nxt_storeDATA1[dINDEX][31:0] = ccif.dload;
+	       ccif.dREN[0] = 1;
+	       ccif.daddr[0] = {storeTAG1[dINDEX],dINDEX,3'b100};
+	       nxt_storeDATA1[dINDEX][31:0] = ccif.dload[0];
 	    end
 
 	  READ1clean2: //DHIT SHOULD BE ASSERTED
@@ -242,16 +260,16 @@ module DCACHE
 	       nxt_storeVALID1[dINDEX] = 1;
 	       nxt_storeDIRTY1[dINDEX] = 0;
 	       nxt_LRUon1[dINDEX] = 1;
-	       nxt_storeDATA1[dINDEX][63:32] = ccif.dload;
-	       ccif.daddr = '0;
-	       ccif.dREN = 0;
+	       nxt_storeDATA1[dINDEX][63:32] = ccif.dload[0];
+	       ccif.daddr[0] = '0;
+	       ccif.dREN[0] = 0;
 	    end
 
 	  READ2clean:
 	    begin
-	       ccif.dREN = 1;
-	       ccif.daddr = {storeTAG2[dINDEX],dINDEX,3'b100};
-	       nxt_storeDATA2[dINDEX][31:0] = ccif.dload;
+	       ccif.dREN[0] = 1;
+	       ccif.daddr[0] = {storeTAG2[dINDEX],dINDEX,3'b100};
+	       nxt_storeDATA2[dINDEX][31:0] = ccif.dload[0];
 	    end // case: READ2clean
 
 	  READ2clean2: //DHIT should be asserted
@@ -260,9 +278,9 @@ module DCACHE
 	       nxt_storeVALID2[dINDEX] = 1;
 	       nxt_storeDIRTY2[dINDEX] = 0;
 	       nxt_LRUon1[dINDEX] = 0;
-	       nxt_storeDATA2[dINDEX][63:32] = ccif.dload;
-	       ccif.daddr = '0;
-	       ccif.dREN = 0;
+	       nxt_storeDATA2[dINDEX][63:32] = ccif.dload[0];
+	       ccif.daddr[0] = '0;
+	       ccif.dREN[0] = 0;
 	    end
 
 	  WRITE1clean:
@@ -270,28 +288,28 @@ module DCACHE
 	       if(doffset)
 		 begin
 		    nxt_storeDATA1[dINDEX][63:32] = dcif.dmemstore;
-		    ccif.daddr = {storeTAG1[dINDEX],dINDEX,3'b000};
+		    ccif.daddr[0] = {storeTAG1[dINDEX],dINDEX,3'b000};
 		 end
 	       else
 		 begin
 		    nxt_storeDATA1[dINDEX][31:0] = dcif.dmemstore;
-		    ccif.daddr = {storeTAG1[dINDEX],dINDEX,3'b100};
+		    ccif.daddr[0] = {storeTAG1[dINDEX],dINDEX,3'b100};
 		 end
-	       ccif.dREN = 1;
+	       ccif.dREN[0] = 1;
 	    end // case: WRITE1clean
 
 	  WRITE1clean2:
 	    begin
 	       if(doffset)
-	     	 nxt_storeDATA1[dINDEX][31:0] = ccif.dload;
+	     	 nxt_storeDATA1[dINDEX][31:0] = ccif.dload[0];
 	       else
-		 nxt_storeDATA1[dINDEX][63:32] = ccif.dload;
+		 nxt_storeDATA1[dINDEX][63:32] = ccif.dload[0];
 	       nxt_storeTAG1[dINDEX] = dTAG;
 	       nxt_storeVALID1[dINDEX] = 1;
 	       nxt_storeDIRTY1[dINDEX] = 1;
 	       nxt_LRUon1[dINDEX] = 1;
-	       ccif.daddr = 0;
-	       ccif.dREN = 0;
+	       ccif.daddr[0] = 0;
+	       ccif.dREN[0] = 0;
 	    end
 
 	  WRITE2clean:
@@ -299,59 +317,69 @@ module DCACHE
 	       if(doffset)
 		 begin
 		    nxt_storeDATA2[dINDEX][63:32] = dcif.dmemstore;
-		    ccif.daddr = {storeTAG2[dINDEX],dINDEX,3'b000};
+		    ccif.daddr[0] = {storeTAG2[dINDEX],dINDEX,3'b000};
 		 end
 	       else
 		 begin
 		    nxt_storeDATA2[dINDEX][31:0] = dcif.dmemstore;
-		    ccif.daddr = {storeTAG2[dINDEX],dINDEX,3'b100};
+		    ccif.daddr[0] = {storeTAG2[dINDEX],dINDEX,3'b100};
 		 end
-	       ccif.dREN = 1;
+	       ccif.dREN[0] = 1;
 	    end // case: WRITE1clean
 
 	  WRITE2clean2:
 	    begin
 	       if(doffset)
-	     	 nxt_storeDATA2[dINDEX][31:0] = ccif.dload;
+	     	 nxt_storeDATA2[dINDEX][31:0] = ccif.dload[0];
 	       else
-		 nxt_storeDATA2[dINDEX][63:32] = ccif.dload;
+		 nxt_storeDATA2[dINDEX][63:32] = ccif.dload[0];
 	       nxt_storeTAG2[dINDEX] = dTAG;
 	       nxt_storeVALID2[dINDEX] = 1;
 	       nxt_storeDIRTY2[dINDEX] = 1;
 	       nxt_LRUon1[dINDEX] = 0;
-	       ccif.daddr = 0;
-	       ccif.dREN = 0;
+	       ccif.daddr[0] = 0;
+	       ccif.dREN[0] = 0;
 	    end
 	  
 	  dirty1:
 	    begin
-	       ccif.dWEN = 1;
-	       ccif.daddr = {storeTAG1[dINDEX],dINDEX,3'b000};
-	       ccif.dstore = storeDATA1[dINDEX][31:0];
+	       ccif.dWEN[0] = 1;
+	       ccif.daddr[0] = {storeTAG1[dINDEX],dINDEX,3'b000};
+	       ccif.dstore[0] = storeDATA1[dINDEX][31:0];
 	    end
 
 	  dirty1_2:
 	    begin
-	       ccif.dWEN = 1;
-	       ccif.daddr = {storeTAG1[dINDEX],dINDEX,3'b100};
-	       ccif.dstore = storeDATA1[dINDEX][63:32];
+	       ccif.dWEN[0] = 1;
+	       ccif.daddr[0] = {storeTAG1[dINDEX],dINDEX,3'b100};
+	       ccif.dstore[0] = storeDATA1[dINDEX][63:32];
 	       nxt_storeDIRTY1[dINDEX] = 0;
 	    end
 	  
 	  dirty2:
 	    begin
-	       ccif.dWEN = 1;
-	       ccif.daddr = {storeTAG2[dINDEX],dINDEX,3'b000};
-	       ccif.dstore = storeDATA2[dINDEX][31:0];
+	       ccif.dWEN[0] = 1;
+	       ccif.daddr[0] = {storeTAG2[dINDEX],dINDEX,3'b000};
+	       ccif.dstore[0] = storeDATA2[dINDEX][31:0];
 	    end	  
 
 	  dirty2_2:
 	    begin
-	       ccif.dWEN = 1;
-	       ccif.daddr = {storeTAG2[dINDEX],dINDEX,3'b100};
-	       ccif.dstore = storeDATA2[dINDEX][63:32];
+	       ccif.dWEN[0] = 1;
+	       ccif.daddr[0] = {storeTAG2[dINDEX],dINDEX,3'b100};
+	       ccif.dstore[0] = storeDATA2[dINDEX][63:32];
 	       nxt_storeDIRTY2[dINDEX] = 0;
 	    end
+
+	  HALTstate:
+	    begin
+	       nxt_storeVALID1 = '{default:0};
+	       nxt_storeVALID2 = '{default:0};
+	       ccif.dWEN[0] = 1;
+	       ccif.daddr[0] = 32'h3100;
+	       ccif.dstore[0] = HITcount;
+	    end
+	  
 	endcase // casez (state)
      end // always_comb
    
@@ -380,6 +408,7 @@ module DCACHE
 	     dcif.dmemload = '0;
 	  end // else: !if(dTAG == storeTAG2[dINDEX])
      end // always_comb
+
    
    
 endmodule // DCACHE

@@ -71,7 +71,7 @@ interface datapath_cache_if;
 
    modport dtb (
 		input dhit, dmemload,
-		output dmemREN, dmemWEN, dmemstore, dmemaddr
+		output dmemREN, dmemWEN, dmemstore, dmemaddr, halt
 		);
    
    
