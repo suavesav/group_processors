@@ -75,6 +75,9 @@ program test(input logic CLK, output logic nRST, system_if.tb syif);
       cycles++;
     end
     $display("Halted at %g time and ran for %d cycles.",$time, cycles);
+     @(posedge CLK);
+     @(posedge CLK);
+     
      nRST = 0;
     dump_memory();
     $finish;
@@ -103,7 +106,7 @@ program test(input logic CLK, output logic nRST, system_if.tb syif);
 
       syif.addr = i << 2;
       syif.REN = 1;
-      repeat (2) @(posedge CLK);
+      repeat (4) @(posedge CLK);
       if (syif.load === 0)
         continue;
       values = {8'h04,16'(i),8'h00,syif.load};

@@ -72,7 +72,6 @@ module datapath (
 
    assign rfif.rsel1 = ifif.idrsel1;          
    assign rfif.rsel2 = ifif.idrsel2;          
-   //assign rfif.wdat = memif.wbMemToReg ? memif.wbdmemload : memif.wbOutput_Port;
    assign rfif.wsel = cuif.JALflag ? 5'd31 : memif.wbwsel;
    assign rfif.WEN = cuif.JALflag ? 1 : memif.wbWEN;              
    
@@ -106,7 +105,6 @@ module datapath (
    //Execute Cycle
    //FROM ID/EX REG
    assign aluif.ALUOP = idif.exALUOP;
-   //assign aluif.Port_A = (hazard_mem_1 == 1) ? (exif.memLUIflag ? {exif.meminstr[15:0],16'd0} : exif.memOutput_Port) : idif.exrdat1;
   
    always_comb
      begin
@@ -179,8 +177,6 @@ module datapath (
    assign exif.exRegDst = idif.exRegDst;
    
    assign exif.exOutput_Port = aluif.Output_Port;
-   //assign exif.exrdat2 = (hazard_mem_2 && idif.exRegDst) ? exif.memOutput_Port : ((hazard_wb_2 && idif.exRegDst) ? memif.wbOutput_Port : idif.exrdat2);
-   //assign exif.exrdat2 = (hazard_mem_2 && idif.exRegDst) ? exif.memOutput_Port : (hazard_wb_2 ? memif.wbOutput_Port : idif.exrdat2);
 
    always_comb
      begin
@@ -247,12 +243,12 @@ module datapath (
      begin
 	if((exif.memcuDRE == 0 || exif.memcuDWE == 0) && !cuif.jmp)
 	  pcWEN = dpif.ihit;
-	else if(hzif.cuHALT)//MADE A CHANGE
+	else if(idif.excuHALT)//MADE A CHANGE
 	  pcWEN = 0;
 	else if(cuif.jmp)
 	  pcWEN = 1;
 	else
-	  pcWEN = dpif.dhit && !cuif.cuHALT;
+	  pcWEN = dpif.dhit;// && !cuif.cuHALT;
      end
    
    //assign addr = iaddr + 4;
