@@ -3,7 +3,7 @@
 
 `timescale 1 ns / 1 ns
 
-module DCACHE_tb;
+module dcache_tb;
 
    parameter PERIOD = 10;
    
@@ -23,9 +23,9 @@ module DCACHE_tb;
 	     );
 
 `ifndef MAPPED
-   DCACHE DUT(CLK, nRST, dcif, ccif);
+   dcache DUT(CLK, nRST, dcif, ccif);
 `else
-   DCACHE DUT(
+   dcache DUT(
 	      .\dcif.halt (dcif.halt),
 	      .\dcif.dmemREN (dcif.dmemREN),
 	      .\dcif.dmemWEN (dcif.dmemWEN),

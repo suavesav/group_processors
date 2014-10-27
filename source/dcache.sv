@@ -1,12 +1,12 @@
 `include "cache_control_if.vh"
 `include "datapath_cache_if.vh"
 
-module DCACHE
+module dcache
   import cpu_types_pkg::*;
    (
     input logic CLK, nRST,
-    datapath_cache_if.dcache dcif,
-    cache_control_if.dcache ccif
+    datapath_cache_if.cache dcif,
+    cache_control_if.caches ccif
     );
    
    //INPUT VALUES

@@ -74,10 +74,7 @@ program test(input logic CLK, output logic nRST, system_if.tb syif);
       @(posedge CLK);
       cycles++;
     end
-    $display("Halted at %g time and ran for %d cycles.",$time, cycles);
-     @(posedge CLK);
-     @(posedge CLK);
-     
+    $display("Halted at %g time and ran for %d cycles.",$time, cycles);  
      nRST = 0;
     dump_memory();
     $finish;

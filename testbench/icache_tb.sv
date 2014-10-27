@@ -3,7 +3,7 @@
 
 `timescale 1 ns / 1 ns
 
-module ICACHE_tb;
+module icache_tb;
 
    parameter PERIOD = 10;
    
@@ -23,7 +23,7 @@ module ICACHE_tb;
 	     );
 
 `ifndef MAPPED
-   ICACHE DUT(CLK, nRST, dcif, ccif);
+   icache DUT(CLK, nRST, dcif, ccif);
 `endif
 
 endmodule // ICACHE_tb

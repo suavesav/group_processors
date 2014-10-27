@@ -10,6 +10,10 @@ module caches (
   input logic CLK, nRST,
   datapath_cache_if.cache dcif,
   cache_control_if.caches ccif
+  //datapath_cache_if.icache idcif,
+  //cache_control_if.icache iccif,
+  //datapath_cache_if.dcache ddcif,
+  //cache_control_if.dcache dccif	       
 );
   parameter CPUID = 0;
 
