@@ -37,4 +37,6 @@ parameter PC0 = 0;
   assign ccif.ramstate = scif.ramstate;
 
   assign halt = dcif.flushed;
+  // assign halt = dcif.halt;
+   
 endmodule
