@@ -50,6 +50,10 @@ program test(input logic CLK, output logic nRST, datapath_cache_if.itb dcif, cac
 	ccif.iload = 32'hDEADBEEF;
 	
 	@(posedge CLK);
+	@(posedge CLK);
+	@(posedge CLK);
+	@(posedge CLK);
+	
 
 	//LOAD VALUE INTO 9
 	dcif.imemaddr = {26'b11001100110000000000000000,4'b1001,2'b00};
@@ -57,6 +61,10 @@ program test(input logic CLK, output logic nRST, datapath_cache_if.itb dcif, cac
 	ccif.iload = 32'hBEEEEEEF;
 
         @(posedge CLK);
+	@(posedge CLK);
+	@(posedge CLK);
+	@(posedge CLK);
+		
 
 	//LOAD FROM INDEX 5 CACHE
 	dcif.imemaddr = {26'b11001100110011001100110011,4'b0101,2'b00};
@@ -64,12 +72,17 @@ program test(input logic CLK, output logic nRST, datapath_cache_if.itb dcif, cac
 	ccif.iload = 32'h00000000;
 
         @(posedge CLK);
+	@(posedge CLK);
+        
 
 	//LOAD DIFFERENT VALUE INTO 9 AND OVERWRITE
 	dcif.imemaddr = {26'b00000000000011001100110011,4'b1001,2'b00};
 	ccif.iwait = 1;
 	ccif.iload = 32'hDEADBEAD;
-	
+
+	@(posedge CLK);
+	@(posedge CLK);
+	@(posedge CLK);
 	@(posedge CLK);
 	@(posedge CLK);
 	

@@ -27,7 +27,6 @@ add wave -noupdate /system_tb/DUT/CPU/DP/hzif/idRST
 add wave -noupdate /system_tb/DUT/CPU/DP/hzif/exRST
 add wave -noupdate /system_tb/DUT/CPU/DP/hzif/memRST
 add wave -noupdate /system_tb/DUT/CPU/DP/hzif/val_brnch
-add wave -noupdate /system_tb/DUT/CPU/DP/hzif/data_hazard
 add wave -noupdate /system_tb/DUT/CPU/DP/hazard_mem_1
 add wave -noupdate /system_tb/DUT/CPU/DP/hazard_mem_2
 add wave -noupdate /system_tb/DUT/CPU/DP/hazard_wb_1
@@ -192,11 +191,45 @@ add wave -noupdate /system_tb/DUT/CPU/DP/dpif/imemaddr
 add wave -noupdate /system_tb/DUT/CPU/DP/dpif/dhit
 add wave -noupdate /system_tb/DUT/CPU/DP/dpif/dmemREN
 add wave -noupdate /system_tb/DUT/CPU/DP/dpif/dmemload
+add wave -noupdate -divider ICACHE
+add wave -noupdate /system_tb/DUT/CPU/CM/ICACHE/inTAG
+add wave -noupdate /system_tb/DUT/CPU/CM/ICACHE/inINDEX
+add wave -noupdate /system_tb/DUT/CPU/CM/ICACHE/inputADDR
+add wave -noupdate /system_tb/DUT/CPU/CM/ICACHE/storeTAG
+add wave -noupdate /system_tb/DUT/CPU/CM/ICACHE/storeDATA
+add wave -noupdate /system_tb/DUT/CPU/CM/ICACHE/storeVALID
+add wave -noupdate -divider DCACHE
+add wave -noupdate /system_tb/DUT/CPU/CM/DCACHE/dTAG
+add wave -noupdate /system_tb/DUT/CPU/CM/DCACHE/dINDEX
+add wave -noupdate /system_tb/DUT/CPU/CM/DCACHE/doffset
+add wave -noupdate /system_tb/DUT/CPU/CM/DCACHE/inputADDR
+add wave -noupdate /system_tb/DUT/CPU/CM/DCACHE/storeTAG1
+add wave -noupdate /system_tb/DUT/CPU/CM/DCACHE/storeDATA1
+add wave -noupdate /system_tb/DUT/CPU/CM/DCACHE/storeVALID1
+add wave -noupdate /system_tb/DUT/CPU/CM/DCACHE/storeDIRTY1
+add wave -noupdate /system_tb/DUT/CPU/CM/DCACHE/LRUon1
+add wave -noupdate /system_tb/DUT/CPU/CM/DCACHE/storeTAG2
+add wave -noupdate /system_tb/DUT/CPU/CM/DCACHE/storeDATA2
+add wave -noupdate /system_tb/DUT/CPU/CM/DCACHE/storeVALID2
+add wave -noupdate /system_tb/DUT/CPU/CM/DCACHE/storeDIRTY2
+add wave -noupdate /system_tb/DUT/CPU/CM/DCACHE/nxt_storeTAG1
+add wave -noupdate /system_tb/DUT/CPU/CM/DCACHE/nxt_storeDATA1
+add wave -noupdate /system_tb/DUT/CPU/CM/DCACHE/nxt_storeVALID1
+add wave -noupdate /system_tb/DUT/CPU/CM/DCACHE/nxt_storeDIRTY1
+add wave -noupdate /system_tb/DUT/CPU/CM/DCACHE/nxt_LRUon1
+add wave -noupdate /system_tb/DUT/CPU/CM/DCACHE/nxt_storeTAG2
+add wave -noupdate /system_tb/DUT/CPU/CM/DCACHE/nxt_storeDATA2
+add wave -noupdate /system_tb/DUT/CPU/CM/DCACHE/nxt_storeVALID2
+add wave -noupdate /system_tb/DUT/CPU/CM/DCACHE/nxt_storeDIRTY2
+add wave -noupdate /system_tb/DUT/CPU/CM/DCACHE/HITcount
+add wave -noupdate /system_tb/DUT/CPU/CM/DCACHE/nxt_HITcount
+add wave -noupdate /system_tb/DUT/CPU/CM/DCACHE/state
+add wave -noupdate /system_tb/DUT/CPU/CM/DCACHE/nextstate
 TreeUpdate [SetDefaultTree]
-WaveRestoreCursors {{Cursor 1} {3458984 ps} 0}
+WaveRestoreCursors {{Cursor 1} {0 ps} 0}
 quietly wave cursor active 1
 configure wave -namecolwidth 150
-configure wave -valuecolwidth 100
+configure wave -valuecolwidth 122
 configure wave -justifyvalue left
 configure wave -signalnamewidth 1
 configure wave -snapdistance 10
@@ -209,4 +242,4 @@ configure wave -griddelta 40
 configure wave -timeline 0
 configure wave -timelineunits ns
 update
-WaveRestoreZoom {3344291 ps} {3719535 ps}
+WaveRestoreZoom {0 ps} {20629 ps}

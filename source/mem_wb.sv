@@ -18,7 +18,7 @@ module mem_wb
 	     memwbif.wbOutput_Port <= '0;
 	     memwbif.wbdmemload <= '0;
 	     memwbif.wbLUIdata <= '0;
-	     memwbif.wbcuHALT <= '0;
+	     memwbif.wbcuHALT <= 0;
 	  end
 	else if(memwbif.memRST)
 	  begin
@@ -29,7 +29,7 @@ module mem_wb
 	     memwbif.wbOutput_Port <= '0;
 	     memwbif.wbdmemload <= '0;
 	     memwbif.wbLUIdata <= 0;
-	     memwbif.wbcuHALT <= '0;
+	     memwbif.wbcuHALT <= 0;
 	  end // if (memwbif.memRST)
 	else if(memwbif.memW)
 	  begin
