@@ -24,14 +24,14 @@ module hazard_unit
 	else if(hzif.dhit && !hzif.cuHALT)
 	  begin
 	     hzif.ifW = 1;
-	     hzif.ifRST = 1;
+	     hzif.ifRST = 0;
 	     hzif.idW = 1;
 	     hzif.exW = 1;
 	     hzif.memW = 1;
 	     hzif.idRST = 0; //hzif.idRST;
 	     hzif.exRST = 0; //hzif.exRST;
 	  end
-	else if(hzif.ihit && (!hzif.cujmp && !hzif.cuJR && !hzif.cuJALflag && !hzif.val_brnch))
+	else if(hzif.ihit && (!hzif.cujmp && !hzif.cuJR && !hzif.cuJALflag && !hzif.val_brnch && !hzif.cuHALT))
 	  begin
 	     hzif.ifW = 1; //hzif.ifW;
 	     hzif.idW = 1; //hzif.idW;

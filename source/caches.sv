@@ -8,8 +8,8 @@
 
 module caches (
   input logic CLK, nRST,
-  datapath_cache_if.cache dcif,
-  cache_control_if.caches ccif
+  datapath_cache_if dcif,
+  cache_control_if ccif
   //datapath_cache_if.icache idcif,
   //cache_control_if.icache iccif,
   //datapath_cache_if.dcache ddcif,
@@ -23,7 +23,7 @@ module caches (
   dcache  DCACHE(CLK, nRST, dcif, ccif);
 
   // dcache invalidate before halt handled by dcache when exists
-  assign dcif.flushed = dcif.halt;
+  //assign dcif.flushed = dcif.halt;
 
   //singlecycle
   /*assign dcif.ihit = (dcif.imemREN) ? ~ccif.iwait[CPUID] : 0;

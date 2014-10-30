@@ -5,8 +5,8 @@ module icache
    import cpu_types_pkg::*;
    (
     input logic CLK, nRST,
-    datapath_cache_if.cache dcif,
-    cache_control_if.caches ccif    
+    datapath_cache_if.icache dcif,
+    cache_control_if.icache ccif    
     );
    
    //INPUT VALUES
@@ -54,11 +54,11 @@ module icache
    always_comb
      begin
 	nextstate = IDLE;
-
+	
 	casez(state)
 	  IDLE:
 	    begin
-	       if(dcif.imemREN)
+	       if(dcif.imemREN && !dcif.pcRST)
 		 begin
 		    if(inTAG != storeTAG[inINDEX] || !storeVALID[inINDEX])
 		      nextstate = READM;
@@ -70,7 +70,12 @@ module icache
 	    end // case: IDLE
 
 	  READM:
-	    nextstate = STORE;
+	    begin
+	       if(dcif.pcRST)
+		 nextstate = IDLE;
+	       else
+		 nextstate = STORE;
+	    end
 
 	  STORE:
 	    nextstate = IDLE;
@@ -82,7 +87,7 @@ module icache
    always_comb
      begin
 	ccif.iREN[0] = 0;
-	ccif.iaddr = '0;
+	ccif.iaddr[0] = '0;
 	nxt_storeDATA = storeDATA;
 	nxt_storeTAG = storeTAG;
 	nxt_storeVALID = storeVALID;

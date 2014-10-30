@@ -20,7 +20,7 @@ interface datapath_cache_if;
 
 // Icache signals
   // hit and enable
-  logic               ihit, imemREN;
+  logic               ihit, imemREN, pcRST;
   // instruction addr
   word_t             imemload, imemaddr;
 
@@ -34,7 +34,7 @@ interface datapath_cache_if;
   modport dp (
     input   ihit, imemload, dhit, dmemload,
     output  halt, imemREN, imemaddr, dmemREN, dmemWEN, datomic,
-            dmemstore, dmemaddr
+            dmemstore, dmemaddr, pcRST
   );
 
    modport tb (
@@ -46,13 +46,13 @@ interface datapath_cache_if;
   // cache block ports
   modport cache (
     input   halt, imemREN, dmemREN, dmemWEN, datomic,
-            dmemstore, dmemaddr, imemaddr,
+            dmemstore, dmemaddr, imemaddr, pcRST,
     output  ihit, dhit, imemload, dmemload, flushed
   );
 
   // icache ports
   modport icache (
-    input   imemREN, imemaddr,
+    input   imemREN, imemaddr, pcRST,
     output  ihit, imemload
   );
 

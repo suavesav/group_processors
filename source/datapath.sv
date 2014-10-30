@@ -238,24 +238,31 @@ module datapath (
    assign memif.memW = hzif.memW;
    assign memif.memRST = hzif.memRST;
    
-   
    always_comb
      begin
-	if((exif.memcuDRE == 0 || exif.memcuDWE == 0) && !cuif.jmp)
-	  pcWEN = dpif.ihit;
-	else if(idif.excuHALT)//MADE A CHANGE
+	if((exif.memcuDRE == 1 || exif.memcuDWE == 1) && !cuif.jmp && !hzif.val_brnch && !cuif.JALflag && !cuif.JR)
+	  pcWEN = dpif.dhit && dpif.ihit;
+	else if(idif.excuHALT)
 	  pcWEN = 0;
-	else if(cuif.jmp)
+	else if(cuif.jmp || hzif.val_brnch || cuif.JALflag || cuif.JR)
 	  pcWEN = 1;
 	else
-	  pcWEN = dpif.dhit;// && !cuif.cuHALT;
-     end
+	  pcWEN = dpif.ihit;
+     end // always_comb
+
+   assign dpif.pcRST = pcWEN;
+   
    
    //assign addr = iaddr + 4;
    always_comb
      begin
 	if((aluif.Zero && idif.exbrnch_eq) || (!aluif.Zero && idif.exbrnch_ne))
-	  addr = (idif.exiaddr + 4) + {14'd0,idif.exinstr[15:0],2'b00};
+	  begin
+	     if(idif.exinstr[15])
+	       addr = (idif.exiaddr + 4) + {14'b11111111111111,idif.exinstr[15:0],2'b00};
+	     else
+	       addr = (idif.exiaddr + 4) + {14'd0,idif.exinstr[15:0],2'b00};
+	  end
 	else if(cuif.jmp || cuif.JALflag)
 	  addr = {temp_addr[31:28],ifif.idinstr[25:0],2'b00};
 	else if(cuif.JR)
