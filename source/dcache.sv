@@ -72,7 +72,7 @@ module dcache
 	     storeDIRTY2 <= '{default:0};
 	     LRUon1 <= '{default:0};
 	     HITcount <= '0;
-	     aINDEX <= '0;
+	     aINDEX <= '{default:0};
 	  end
 	else
 	  begin
@@ -287,13 +287,12 @@ module dcache
 	casez(state)
 	  IDLE:
 	    begin
-	       if((dTAG == storeTAG1[dINDEX] && storeVALID1[dINDEX]) || (dTAG == storeTAG2[dINDEX] && storeVALID2[dINDEX]))
+	       if((dTAG == storeTAG1[dINDEX] || dTAG == storeTAG2[dINDEX]) && (dcif.dmemREN || dcif.dmemWEN))
 		 nxt_HITcount = HITcount + 1;
 	    end
 	  
 	  READM:
 	    begin
-	       //nxt_HITcount = HITcount - 1;
 	       ccif.dREN[0] = 1;
 	       if(!LRUon1[dINDEX])
 		 ccif.daddr[0] = {dTAG,dINDEX,3'b000};
@@ -317,7 +316,6 @@ module dcache
 	       nxt_storeDATA1[dINDEX][63:32] = ccif.dload[0];
 	       ccif.daddr[0] = '0;
 	       ccif.dREN[0] = 0;
-	       //nxt_HITcount = HITcount - 1;
 	    end
 
 	  READ2clean:
@@ -336,15 +334,11 @@ module dcache
 	       nxt_storeDATA2[dINDEX][63:32] = ccif.dload[0];
 	       ccif.daddr[0] = '0;
 	       ccif.dREN[0] = 0;
-	       //nxt_HITcount = HITcount - 1;
 	    end // case: READ2clean2
 
-	  //WRITEM:
-	    //nxt_HITcount = HITcount - 1;
 	  
 	  WRITEHIT1:
 	    begin
-	       //nxt_HITcount = HITcount + 1;
 	       if(doffset)
 		 nxt_storeDATA1[dINDEX][63:32] = dcif.dmemstore;
 	       else
@@ -353,7 +347,6 @@ module dcache
 
 	  WRITEHIT2:
 	    begin
-	       //nxt_HITcount = HITcount + 1;
 	       if(doffset)
 		 nxt_storeDATA2[dINDEX][63:32] = dcif.dmemstore;
 	       else
@@ -387,7 +380,6 @@ module dcache
 	       nxt_LRUon1[dINDEX] = 1;
 	       ccif.daddr[0] = 0;
 	       ccif.dREN[0] = 0;
-	       //nxt_HITcount = HITcount - 1;
 	    end
 
 	  WRITE2clean:
@@ -417,7 +409,6 @@ module dcache
 	       nxt_LRUon1[dINDEX] = 0;
 	       ccif.daddr[0] = 0;
 	       ccif.dREN[0] = 0;
-	       //nxt_HITcount = HITcount - 1;
 	    end
 	  
 	  dirty1:
@@ -449,9 +440,6 @@ module dcache
 	       ccif.dstore[0] = storeDATA2[dINDEX][63:32];
 	       nxt_storeDIRTY2[dINDEX] = 0;
 	    end
-
-	  LOAD:
-	    nxt_HITcount = HITcount - 1;
 	  
 	  HALTstate:
 	    begin

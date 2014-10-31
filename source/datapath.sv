@@ -245,7 +245,7 @@ module datapath (
 	else if(idif.excuHALT)
 	  pcWEN = 0;
 	else if(cuif.jmp || hzif.val_brnch || cuif.JALflag || cuif.JR)
-	  pcWEN = 1;
+	  pcWEN = (exif.memcuDRE == 1 || exif.memcuDWE == 1) ? dpif.dhit : 1;
 	else
 	  pcWEN = dpif.ihit;
      end // always_comb
