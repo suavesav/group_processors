@@ -24,7 +24,310 @@ module memory_control (
   parameter CPUS = 2;
 
 
+   typedef enum logic [3:0] {IDLE, BUSRD0, BUSRD1, BUSRDX0, BUSRDX1, RAMRD0, RAMWR0, RAMRD1, RAMWR1, RAMRDI0, RAMRDI1} STATE;
+
+   STATE state,nextstate;
+
+   always_ff @ (posedge CLK, negedge nRST)
+     begin
+      if(!nRST)
+	begin
+	   state <= IDLE;
+	end
+      else
+	begin
+	   state <= nextstate;
+	end
+     end // always_ff @
+   
+   //NEXT STATE LOGIC
    always_comb
+     begin
+	nextstate = IDLE;
+
+	casez(state)
+	  IDLE:
+	    begin
+	       if(ccif.dREN[0] || ccif.dWEN[0])
+		 begin
+		    if(ccif.cctrans[0] && !ccif.ccwrite[0])
+		      nextstate = BUSRD0;
+		    else if(ccif.cctrans[0] && ccif.ccwrite[0])
+		      nextstate = BUSRDX0;
+		    else
+		      begin
+			 if(ccif.dREN[0])
+			   nextstate = RAMRD0;
+			 else
+			   nextstate = RAMWR0;
+		      end
+		 end
+	       else if(ccif.dREN[1] || ccif.dWEN[1])
+		 begin
+		    if(ccif.cctrans[1] && !ccif.ccwrite[1])
+		      nextstate = BUSRD1;
+		    else if(ccif.cctrans[1] && ccif.ccwrite[1])
+		      nextstate = BUSRDX1;
+		    else
+		      begin
+			 if(ccif.dREN[1])
+			   nextstate = RAMRD1;
+			 else
+			   nextstate = RAMWR1;
+		      end
+		 end
+	       else if(ccif.iREN[0])
+		 nextstate = RAMRDI0;
+	       else if(ccif.iREN[1])
+		 nextstate = RAMRDI1;
+	       else
+		 nextstate = IDLE;
+	    end // case: IDLE
+
+	  BUSRD0:
+	    begin
+	       if(!ccif.dWEN[1])
+		 begin
+		    if(ccif.dREN[0])
+		      nextstate = RAMRD0;
+		    else
+		      nextstate = RAMWR0;
+		 end
+	       else
+		 nextstate = BUSRD0;
+	    end 
+
+	  BUSRDX0:
+	    begin
+	       if(!ccif.dWEN[1])
+		 begin
+		    if(ccif.dREN[0])
+		      nextstate = RAMRD0;
+		    else
+		      nextstate = RAMWR0;
+		 end
+	       else
+		 nextstate = BUSRD0;
+	    end 
+
+	  BUSRD1:
+	    begin
+	       if(!ccif.dWEN[0])
+		 begin
+		    if(ccif.dREN[1])
+		      nextstate = RAMRD1;
+		    else
+		      nextstate = RAMWR1;
+		 end
+	       else
+		 nextstate = BUSRD1;
+	    end
+
+	  BUSRDX1:
+	    begin
+	       if(!ccif.dWEN[0])
+		 begin
+		    if(ccif.dREN[1])
+		      nextstate = RAMRD1;
+		    else
+		      nextstate = RAMWR1;
+		 end
+	       else
+		 nextstate = BUSRD1;
+	    end // case: BUSRDX1
+
+	  RAMRD0:
+	    begin
+	       if(!ccif.dREN[0])
+		 nextstate = IDLE;
+	       else
+		 nextstate = RAMRD0;
+	    end
+
+	  RAMWR0:
+	    begin
+	       if(!ccif.dWEN[0])
+		 nextstate = IDLE;
+	       else
+		 nextstate = RAMWR0;
+	    end
+	  
+	  RAMRD1:
+	    begin
+	       if(!ccif.dREN[1])
+		 nextstate = IDLE;
+	       else
+		 nextstate = RAMRD1;
+	    end
+
+	  RAMWR1:
+	    begin
+	       if(!ccif.dWEN[1])
+		 nextstate = IDLE;
+	       else
+		 nextstate = RAMWR1;
+	    end
+
+	  RAMRDI0:
+	    begin
+	       if(!ccif.iREN[0])
+		 nextstate = IDLE;
+	       else
+		 nextstate = RAMRDI0;
+	    end
+
+	  RAMRDI0:
+	    begin
+	       if(!ccif.iREN[1])
+		 nextstate = IDLE;
+	       else
+		 nextstate = RAMRDI1;
+	    end
+
+
+	endcase // casez (state)
+     end // always_comb
+
+
+   //OUTPUT LOGIC
+   always_comb
+     begin
+	ccif.iload[0] = '0;
+	ccif.iload[1] = '0;
+	ccif.dload[0] = '0;
+	ccif.dload[1] = '0;
+	ccif.ramstore = '0;
+	ccif.ramaddr = '0;
+	ccif.ramWEN = 0;
+	ccif.ramREN = 0;
+	ccif.ccwait[0] = 0;
+	ccif.ccwait[1] = 0;
+	ccif.ccinv[0] = 0;
+	ccif.ccinv[1] = 0;
+	ccif.ccsnoopaddr[0] = '0;
+	ccif.ccsnoopaddr[1] = '0;
+
+	casez(state)
+	  BUSRD0:
+	    begin
+	       ccif.ccwait[1] = 1;
+	       ccif.ccsnoopaddr[1] = ccif.daddr[0];
+	    end
+
+	  BUSRDX0:
+	    begin
+	       ccif.ccwait[1] = 1;
+	       ccif.ccsnoopaddr[1] = ccif.daddr[0];
+	       ccif.ccinv[1] = 1;
+	    end
+
+	  BUSRD1:
+	    begin
+	       ccif.ccwait[0] = 1;
+	       ccif.ccsnoopaddr[0] = ccif.daddr[1];
+	    end
+	  
+	  BUSRDX1:
+	    begin
+	       ccif.ccwait[0] = 1;
+	       ccif.ccsnoopaddr[0] = ccif.daddr[1];
+	       ccif.ccinv[0] = 1;
+	    end
+	 
+	  RAMRD0:
+	    begin
+	       ccif.ramREN = 1;
+	       ccif.ramaddr = ccif.daddr[0];
+	       ccif.dload[0] = ccif.ramload;
+	    end
+
+	  RAMWR0:
+	    begin
+	       ccif.ramWEN = 1;
+	       ccif.ramaddr = ccif.daddr[0];
+	       ccif.ramstore = ccif.dstore[0];
+	    end
+
+	  RAMRD1:
+	    begin
+	       ccif.ramREN = 1;
+	       ccif.ramaddr = ccif.daddr[1];
+	       ccif.dload[1] = ccif.ramload;
+	    end
+
+	  RAMWR1:
+	    begin
+	       ccif.ramWEN = 1;
+	       ccif.ramaddr = ccif.daddr[1];
+	       ccif.ramstore = ccif.dstore[1];
+	    end
+
+	  RAMRDI0:
+	    begin
+	       ccif.ramREN = 1;
+	       ccif.ramaddr = ccif.iaddr[0];
+	       ccif.iload[0] = ccif.ramload;
+	    end
+
+	  RAMRDI1:
+	    begin
+	       ccif.ramREN = 1;
+	       ccif.ramaddr = ccif.iaddr[1];
+	       ccif.iload[1] = ccif.ramload;
+	    end
+
+	endcase // casez (state)
+     end // always_comb
+   
+   always_comb
+     begin
+	casez(ccif.ramstate)
+	  BUSY:
+	    begin
+	       ccif.iwait[0] = 1;
+	       ccif.dwait[0] = 1;
+	       ccif.iwait[1] = 1;
+	       ccif.dwait[1] = 1;
+	    end
+	  ACCESS:
+	    begin
+	       if(ccif.dREN[0] || ccif.dWEN[0])
+		 begin
+		    ccif.dwait[0] = 0;
+		    ccif.iwait[0] = 1;
+		    ccif.iwait[1] = 1;
+		    ccif.dwait[1] = 1;
+		 end
+	       else if(ccif.dREN[1] || ccif.dWEN[1])
+		 begin
+		    ccif.dwait[0] = 1;
+		    ccif.iwait[0] = 1;
+		    ccif.iwait[1] = 1;
+		    ccif.dwait[1] = 0;
+		 end  
+	       else
+		 begin
+		    ccif.dwait[0] = 0;
+		    ccif.iwait[0] = 0;
+		    ccif.iwait[1] = 0;
+		    ccif.dwait[1] = 0;
+		 end
+	    end // case: ACCESS
+	  default:
+	    begin
+	       ccif.dwait[0] = 1;
+	       ccif.iwait[0] = 1;
+	       ccif.iwait[1] = 1;
+	       ccif.dwait[1] = 1;
+	    end
+	endcase // casez (ccif.ramstate)
+     end // always_comb
+   
+endmodule // memory_control
+
+   
+
+   /*always_comb
      begin
 	if(ccif.dREN[0] || ccif.dWEN[0])
 	  begin
@@ -100,8 +403,8 @@ module memory_control (
 
    assign ccif.ramREN = ((ccif.iREN[0] && !ccif.dWEN[0]) || ccif.dREN[0]) ? 1 : 0;
    assign ccif.ramWEN = ccif.dWEN[0] ? 1 : 0;
-   
+   */
 
    
-endmodule // memory_control
+
 

@@ -20,8 +20,14 @@ add wave -noupdate /memory_control_tb/ccif/dload
 add wave -noupdate /memory_control_tb/ccif/daddr
 add wave -noupdate /memory_control_tb/ccif/dWEN
 add wave -noupdate /memory_control_tb/ccif/dstore
+add wave -noupdate -divider coherence
+add wave -noupdate /memory_control_tb/ccif/ccwait
+add wave -noupdate /memory_control_tb/ccif/ccinv
+add wave -noupdate /memory_control_tb/ccif/ccwrite
+add wave -noupdate /memory_control_tb/ccif/cctrans
+add wave -noupdate /memory_control_tb/ccif/ccsnoopaddr
 TreeUpdate [SetDefaultTree]
-WaveRestoreCursors {{Cursor 1} {216207 ps} 0}
+WaveRestoreCursors {{Cursor 1} {80500 ps} 0}
 quietly wave cursor active 1
 configure wave -namecolwidth 102
 configure wave -valuecolwidth 140

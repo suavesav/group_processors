@@ -47,51 +47,26 @@ program test(input logic CLK, output logic nRST, cache_control_if.tb ccif, cpu_r
 	
 	//INITIAL
 	nRST = 1;
-	ccif.iREN = 0;
-	ccif.iaddr = '0;
-	ccif.dstore = '0;
-	ccif.dREN = 0;
-	ccif.dWEN = 0;
-	ccif.daddr = '0;
+	ccif.iREN[0] = 0;
+	ccif.iaddr[0] = '0;
+	ccif.dstore[0] = '0;
+	ccif.dREN[0] = 0;
+	ccif.dWEN[0] = 0;
+	ccif.daddr[0] = '0;
+	ccif.iREN[1] = 0;
+	ccif.iaddr[1] = '0;
+	ccif.dstore[1] = '0;
+	ccif.dREN[1] = 0;
+	ccif.dWEN[1] = 0;
+	ccif.daddr[1] = '0;
 
 	@(posedge CLK);
 	nRST = 0;
 	@(posedge CLK);                    //Test iREN
 	nRST = 1;
-	ccif.iREN = 1;
-	ccif.iaddr = 32'd8;
 	@(posedge CLK);
 	@(posedge CLK);
-	ccif.iREN = 0;                     //TEST dWEN
-	ccif.daddr = 32'd16;
-	ccif.dstore = 32'hcaadc005;
-	ccif.dWEN = 1;
-	@(posedge CLK);
-	@(posedge CLK);                    //TEST dREN
-	ccif.dWEN = 0;
-	ccif.dREN = 1;
-	ccif.daddr = 32'd12;
-	@(posedge CLK);
-	@(posedge CLK);                    //dWEN and iWEN together
-	ccif.dREN = 0;
-	ccif.daddr = 32'd20;
-	ccif.dstore = 32'h12345678;
-	ccif.iaddr = 32'd16;
-	ccif.dWEN = 1;
-	ccif.iREN = 1;
-	@(posedge CLK);
-	@(posedge CLK);
-	ccif.dWEN = 0;
-	@(posedge CLK);
-	@(posedge CLK);
-	ccif.dREN = 1;
-	ccif.daddr = 32'd20;
-	ccif.iaddr = 32'd8;
-	@(posedge CLK);
-	@(posedge CLK);
-	ccif.dREN = 0;
-	@(posedge CLK);
-	@(posedge CLK);
+	
 	
      end
 
