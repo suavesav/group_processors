@@ -80,8 +80,8 @@ interface cache_control_if;
    //MEMORY CONTROL TEST BENCH ADDED BY CHAD
 
    modport tb (
-	       input iload, iwait, dwait, dload, ramstore, ramaddr, ramREN, ramWEN,
-	       output iREN, iaddr, dstore, dREN, dWEN, daddr
+	       input iload, iwait, dwait, dload, ramstore, ramaddr, ramREN, ramWEN, ccwait, ccinv, ccsnoopaddr,
+	       output iREN, iaddr, dstore, dREN, dWEN, daddr, ramload, ramstate, ccwrite, cctrans
 	       );
 
    //ICACHE TB ADDED BY CHAD
