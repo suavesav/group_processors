@@ -212,6 +212,11 @@ module memory_control (
 	    begin
 	       ccif.ccwait[1] = 1;
 	       ccif.ccsnoopaddr[1] = ccif.daddr[0];
+	       ccif.ramaddr = ccif.daddr[1];
+	       ccif.ramWEN = ccif.dWEN[1];
+	       ccif.ramstore = ccif.dstore[1];
+	       if(ccif.dREN[0] && ccif.dWEN[1])
+		 ccif.dload[0] = ccif.dstore[1];
 	    end
 
 	  BUSRDX0:
@@ -219,12 +224,18 @@ module memory_control (
 	       ccif.ccwait[1] = 1;
 	       ccif.ccsnoopaddr[1] = ccif.daddr[0];
 	       ccif.ccinv[1] = 1;
+	       ccif.ramaddr = ccif.daddr[1];
+	       ccif.ramWEN = ccif.dWEN[1];
+	       ccif.ramstore = ccif.dstore[1];
 	    end
 
 	  BUSRD1:
 	    begin
 	       ccif.ccwait[0] = 1;
 	       ccif.ccsnoopaddr[0] = ccif.daddr[1];
+	       ccif.ramaddr = ccif.daddr[0];
+	       ccif.ramWEN = ccif.dWEN[0];
+	       ccif.ramstore = ccif.dstore[0];
 	    end
 	  
 	  BUSRDX1:
@@ -232,6 +243,9 @@ module memory_control (
 	       ccif.ccwait[0] = 1;
 	       ccif.ccsnoopaddr[0] = ccif.daddr[1];
 	       ccif.ccinv[0] = 1;
+	       ccif.ramaddr = ccif.daddr[0];
+	       ccif.ramWEN = ccif.dWEN[0];
+	       ccif.ramstore = ccif.dstore[0];
 	    end
 	 
 	  RAMRD0:
@@ -326,84 +340,6 @@ module memory_control (
 endmodule // memory_control
 
    
-
-   /*always_comb
-     begin
-	if(ccif.dREN[0] || ccif.dWEN[0])
-	  begin
-	     if(ccif.dWEN[0])
-	       begin
-		  ccif.ramaddr = ccif.daddr[0];
-		  ccif.ramstore = ccif.dstore[0];
-		  ccif.dload[0] = 0;
-		  ccif.iload[0] = ccif.ramload;
-	       end
-	     else if(ccif.dREN[0])
-	       begin
-		  ccif.ramaddr = ccif.daddr[0];
-		  ccif.ramstore = '0;
-		  ccif.dload[0] = ccif.ramload;
-		  ccif.iload[0] = ccif.ramload;
-	       end
-	     else
-	       begin
-		  ccif.ramaddr = '0;
-		  ccif.dload[0] = 0;
-		  ccif.ramstore = '0;
-		  ccif.iload[0] = ccif.ramload;
-	       end
-	  end
-	else
-	  begin
-	  if(ccif.iREN[0])
-	    begin
-	       ccif.ramaddr = ccif.iaddr[0];
-	       ccif.iload[0] = ccif.ramload;
-	       ccif.ramstore = ccif.dstore[0];
-	       ccif.dload[0] = 0;
-	    end
-	  else
-	    begin
-	       ccif.ramaddr = '0;
-	       ccif.iload[0] = 0;
-	       ccif.ramstore = ccif.dstore[0];
-	       ccif.dload[0] = 0;
-	    end
-	  end
-     end // always_comb
-
-   always_comb
-     begin
-	casez(ccif.ramstate)
-	  BUSY:
-	    begin
-	       ccif.iwait[0] = 1;
-	       ccif.dwait[0] = 1;
-	    end
-	  ACCESS:
-	    begin
-	       if(ccif.dREN[0] || ccif.dWEN[0])
-		 begin
-		    ccif.dwait[0] = 0;
-		    ccif.iwait[0] = 1;
-		 end
-	       else
-		 begin
-		    ccif.dwait[0] = 0;
-		    ccif.iwait[0] = 0;
-		 end
-	    end // case: ACCESS
-	  default:
-	    begin
-	       ccif.dwait[0] = 1;
-	       ccif.iwait[0] = 1;
-	    end
-	endcase // casez (ccif.ramstate)
-     end // always_comb
-
-   assign ccif.ramREN = ((ccif.iREN[0] && !ccif.dWEN[0]) || ccif.dREN[0]) ? 1 : 0;
-   assign ccif.ramWEN = ccif.dWEN[0] ? 1 : 0;
-   */
 
    
 

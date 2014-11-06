@@ -16,12 +16,12 @@ module memory_control_tb;
    cpu_ram_if prif();
 
    //MAP MEM CONTROL SIGNALS TO RAM
-   assign ccif.ramstate = prif.ramstate;
+   /*assign ccif.ramstate = prif.ramstate;
    assign ccif.ramload = prif.ramload;
    assign prif.ramstore = ccif.ramstore;
    assign prif.ramaddr = ccif.ramaddr;
    assign prif.ramREN = ccif.ramREN;
-   assign prif.ramWEN = ccif.ramWEN;
+   assign prif.ramWEN = ccif.ramWEN;*/
    
 
    //test PROGRAM
@@ -59,13 +59,83 @@ program test(input logic CLK, output logic nRST, cache_control_if.tb ccif, cpu_r
 	ccif.dREN[1] = 0;
 	ccif.dWEN[1] = 0;
 	ccif.daddr[1] = '0;
-
+	ccif.ccwrite[0] = 0;
+	ccif.ccwrite[1] = 0;
+	ccif.cctrans[0] = 0;
+	ccif.cctrans[1] = 0;
+	ccif.ramload = '0;
+	ccif.ramstate = BUSY;
+	
 	@(posedge CLK);
 	nRST = 0;
-	@(posedge CLK);                    //Test iREN
+	@(posedge CLK);                    //Test iREN[0]
 	nRST = 1;
+	ccif.iREN[0] = 1;
+	ccif.iaddr[0] = 32'h12345678;
+	@(posedge CLK);
+	ccif.ramload = 32'h44444444;
+	ccif.ramstate = ACCESS;
+	@(posedge CLK);
+	ccif.iREN[0] = 0;
+	@(posedge CLK);
+	ccif.iREN[1] = 1;
+	ccif.iaddr[1] = 32'h87654321;
+	ccif.ramstate = BUSY;
+	@(posedge CLK);
+	ccif.ramload = 32'h55555555;
+	ccif.ramstate = ACCESS;
+	@(posedge CLK);
+	ccif.iREN[1] = 0;
+	@(posedge CLK);
+
+	//TEST D WRITE NO COHERENCE
+	ccif.dWEN[0] = 1;
+	ccif.dstore[0] = 32'h01020304;
+	ccif.daddr[0] = 32'h23322332;
+	ccif.ramstate = BUSY;
+	@(posedge CLK);
+	ccif.ramstate = ACCESS;
+	@(posedge CLK);
+	ccif.dWEN[0] = 0;
+	@(posedge CLK);
+	ccif.dWEN[1] = 1;
+	ccif.dstore[1] = 32'h10203040;
+	ccif.daddr[1] = 32'h32233223;
+	ccif.ramstate = BUSY;
+	@(posedge CLK);
+	ccif.ramstate = ACCESS;
+	@(posedge CLK);
+	ccif.dWEN[1] = 0;
 	@(posedge CLK);
 	@(posedge CLK);
+
+	//TEST D WRITE COHERENCE
+	ccif.dWEN[0] = 1;
+	ccif.dstore[0] = 32'hDEADDEAD;
+	ccif.daddr[0] = 32'hBEEFBEEF;
+	ccif.cctrans[0] = 1;
+	@(posedge CLK);
+	ccif.dWEN[1] = 1;
+	ccif.daddr[1] = 32'h10101010;
+	ccif.dstore[1] = 32'h10101010;
+	@(posedge CLK);
+	ccif.daddr[1] = 32'h01010101;
+	ccif.dstore[1] = 32'h01010101;
+	@(posedge CLK);
+	ccif.dWEN[1] = 0;
+	ccif.cctrans[0] = 0;
+	@(posedge CLK);
+	@(posedge CLK);
+	ccif.dstore[0] = 32'hBEEBBEEB;
+	ccif.daddr[0] = 32'h00100144;
+	@(posedge CLK);
+	ccif.dWEN[0] = 0;
+	@(posedge CLK);
+	@(posedge CLK);
+
+	//TEST D READ COHERENCE
+	
+	
 	
 	
      end
