@@ -155,22 +155,52 @@ module dcache
 	  READM:
 	    begin
 	       if(!LRUon1[dINDEX])
+		 begin
+		    if(!ccif.dwait[0])
+		      nextstate = READ1clean;
+		    else
+		      nextstate = READM;
+		 end
+	       else
+		 begin
+		    if(!ccif.dwait[0])
+		      nextstate = READ2clean;
+		    else
+		      nextstate = READM;
+		 end
+	    end
+	  
+	  READ1clean:
+	    begin
+	       if(!ccif.dwait[0])
+		 nextstate = READ1clean2;
+	       else
 		 nextstate = READ1clean;
+	    end
+
+	  READ1clean2:
+	    begin
+	       //if(!ccif.dwait[0])
+	       nextstate = LOAD;
+	       //else
+		// nextstate = READ1clean2;
+	    end
+	  
+	  READ2clean:
+	    begin
+	       if(!ccif.dwait[0])
+		 nextstate = READ2clean2;
 	       else
 		 nextstate = READ2clean;
 	    end
 	  
-	  READ1clean:
-	    nextstate = READ1clean2;
-
-	  READ1clean2:
-	    nextstate = LOAD;
-	  
-	  READ2clean:
-	    nextstate = READ2clean2;
-	  
 	  READ2clean2:
-	    nextstate = LOAD;
+	    begin
+	       //if(!ccif.dwait[0])
+	       nextstate = LOAD;
+	       //else
+		 //nextstate = READ2clean2;
+	    end
 
 	  WRITEHIT1:
 	    nextstate = LOAD;
@@ -187,60 +217,120 @@ module dcache
 	    end
 
 	  WRITE1clean:
-	    nextstate = WRITE1clean2;
+	    begin
+	       if(!ccif.dwait[0])
+		 nextstate = WRITE1clean2;
+	       else
+		 nextstate = WRITE1clean;
+	    end
 
 	  WRITE1clean2:
-	    nextstate = LOAD;
+	    begin
+	       //if(!ccif.dwait[0])
+	       nextstate = LOAD;
+	       //else
+		 //nextstate = WRITE1clean2;
+	    end
 
 	  WRITE2clean:
-	    nextstate = WRITE2clean2;
+	    begin
+	       if(!ccif.dwait[0])
+		 nextstate = WRITE2clean2;
+	       else
+		 nextstate = WRITE2clean;
+	    end
 	  
 	  WRITE2clean2:
-	    nextstate = LOAD;
+	    begin
+	       //if(!ccif.dwait[0])
+	       nextstate = LOAD;
+	       //else
+		 //nextstate = WRITE2clean2;
+	    end
 	  
 	  dirty1:
-	    nextstate = dirty1_2;
+	    begin
+	       if(!ccif.dwait[0])
+		 nextstate = dirty1_2;
+	       else
+		 nextstate = dirty1;
+	    end
 	  
 	  dirty2:
-	    nextstate = dirty2_2;
+	    begin
+	       if(!ccif.dwait[0])
+		 nextstate = dirty2_2;
+	       else
+		 nextstate = dirty2;
+	    end
 	  
 	  dirty1_2:
 	    begin
-	       if(dcif.dmemREN)
-		 nextstate = READM;
+	       if(!ccif.dwait[0])
+		 begin
+		    if(dcif.dmemREN)
+		      nextstate = READM;
+		    else
+		      nextstate = WRITEM;
+		 end
 	       else
-		 nextstate = WRITEM;
+		 nextstate = dirty1_2;
 	    end
 	  	  
 	  dirty2_2:
 	    begin
-	       if(dcif.dmemREN)
-		 nextstate = READM;
+	       if(!ccif.dwait[0])
+		 begin
+		    if(dcif.dmemREN)
+		      nextstate = READM;
+		    else
+		      nextstate = WRITEM;
+		 end
 	       else
-		 nextstate = WRITEM;
+		 nextstate = dirty2_2;
 	    end
 
 	  LOAD:
 	    nextstate = IDLE;
    	  
 	  HALTstate:
-	    nextstate = FLUSHED1;
+	    begin
+	       if(!ccif.dwait[0])
+		 nextstate = FLUSHED1;
+	       else
+		 nextstate = HALTstate;
+	    end
 
 	  FLUSHED1:
 	    begin
 	       if(storeDIRTY1[aINDEX])
-		 nextstate = FLUSHED2;
+		 begin
+		    if(!ccif.dwait[0])
+		      nextstate = FLUSHED2;
+		    else
+		      nextstate = FLUSHED1;
+		 end
 	       else
 		 nextstate = FLUSHED3;
 	    end
 
 	  FLUSHED2:
-	    nextstate = FLUSHED3;
+	    begin
+	       if(!ccif.dwait[0])
+		 nextstate = FLUSHED3;
+	       else
+		 nextstate = FLUSHED2;
+	    end
 	  
 	  FLUSHED3:
 	    begin
 	       if(storeDIRTY2[aINDEX])
-		 nextstate = FLUSHED4;
+		 begin
+		    if(!ccif.dwait[0])
+		      nextstate = FLUSHED4;
+		    else
+		      nextstate = FLUSHED3;
+		 end
 	       else if(aINDEX == 4'd8)
 		 nextstate = FLUSHED;
 	       else
@@ -249,10 +339,15 @@ module dcache
 
 	  FLUSHED4:
 	    begin
-	       if(aINDEX == 4'd8)
-		 nextstate = FLUSHED;
+	       if(!ccif.dwait[0])
+		 begin
+		    if(aINDEX == 4'd8)
+		      nextstate = FLUSHED;
+		    else
+		      nextstate = FLUSHEDi;
+		 end
 	       else
-		 nextstate = FLUSHEDi;
+		 nextstate = FLUSHED4;
 	    end
 
 	  FLUSHEDi:
@@ -294,17 +389,22 @@ module dcache
 	  READM:
 	    begin
 	       ccif.dREN[0] = 1;
-	       if(!LRUon1[dINDEX])
-		 ccif.daddr[0] = {dTAG,dINDEX,3'b000};
-	       else
-		 ccif.daddr[0] = {dTAG,dINDEX,3'b000};
+	       ccif.daddr[0] = {dTAG,dINDEX,3'b000};
+	       if(!ccif.dwait[0])
+		 begin
+		    if(!LRUon1[dINDEX])
+		      nxt_storeDATA1[dINDEX][31:0] = ccif.dload[0];
+		    else
+		      nxt_storeDATA2[dINDEX][31:0] = ccif.dload[0];
+		 end
 	    end
 
 	  READ1clean:
 	    begin	       
 	       ccif.dREN[0] = 1;
 	       ccif.daddr[0] = {dTAG,dINDEX,3'b100};
-	       nxt_storeDATA1[dINDEX][31:0] = ccif.dload[0];
+	       if(!ccif.dwait[0])
+		 nxt_storeDATA1[dINDEX][63:32] = ccif.dload[0];
 	    end
 
 	  READ1clean2: //DHIT SHOULD BE ASSERTED
@@ -313,7 +413,6 @@ module dcache
 	       nxt_storeVALID1[dINDEX] = 1;
 	       nxt_storeDIRTY1[dINDEX] = 0;
 	       nxt_LRUon1[dINDEX] = 1;
-	       nxt_storeDATA1[dINDEX][63:32] = ccif.dload[0];
 	       ccif.daddr[0] = '0;
 	       ccif.dREN[0] = 0;
 	    end
@@ -322,7 +421,8 @@ module dcache
 	    begin
 	       ccif.dREN[0] = 1;
 	       ccif.daddr[0] = {dTAG,dINDEX,3'b100};
-	       nxt_storeDATA2[dINDEX][31:0] = ccif.dload[0];
+	       if(!ccif.dwait[0])
+		 nxt_storeDATA2[dINDEX][63:32] = ccif.dload[0];
 	    end // case: READ2clean
 
 	  READ2clean2: //DHIT should be asserted
@@ -331,7 +431,7 @@ module dcache
 	       nxt_storeVALID2[dINDEX] = 1;
 	       nxt_storeDIRTY2[dINDEX] = 0;
 	       nxt_LRUon1[dINDEX] = 0;
-	       nxt_storeDATA2[dINDEX][63:32] = ccif.dload[0];
+	       //nxt_storeDATA2[dINDEX][63:32] = ccif.dload[0];
 	       ccif.daddr[0] = '0;
 	       ccif.dREN[0] = 0;
 	    end // case: READ2clean2
@@ -365,15 +465,18 @@ module dcache
 		    nxt_storeDATA1[dINDEX][31:0] = dcif.dmemstore;
 		    ccif.daddr[0] = {dTAG,dINDEX,3'b100};
 		 end
+	       if(!ccif.dwait[0])
+		 begin
+		    if(doffset)
+	     	      nxt_storeDATA1[dINDEX][31:0] = ccif.dload[0];
+		    else
+		      nxt_storeDATA1[dINDEX][63:32] = ccif.dload[0];
+		 end
 	       ccif.dREN[0] = 1;
 	    end // case: WRITE1clean
 
 	  WRITE1clean2:
 	    begin
-	       if(doffset)
-	     	 nxt_storeDATA1[dINDEX][31:0] = ccif.dload[0];
-	       else
-		 nxt_storeDATA1[dINDEX][63:32] = ccif.dload[0];
 	       nxt_storeTAG1[dINDEX] = dTAG;
 	       nxt_storeVALID1[dINDEX] = 1;
 	       nxt_storeDIRTY1[dINDEX] = 1;
@@ -394,15 +497,18 @@ module dcache
 		    nxt_storeDATA2[dINDEX][31:0] = dcif.dmemstore;
 		    ccif.daddr[0] = {dTAG,dINDEX,3'b100};
 		 end
+	       if(!ccif.dwait[0])
+		 begin
+		    if(doffset)
+	     	      nxt_storeDATA2[dINDEX][31:0] = ccif.dload[0];
+		    else
+		      nxt_storeDATA2[dINDEX][63:32] = ccif.dload[0];
+		 end
 	       ccif.dREN[0] = 1;
 	    end // case: WRITE1clean
 
 	  WRITE2clean2:
 	    begin
-	       if(doffset)
-	     	 nxt_storeDATA2[dINDEX][31:0] = ccif.dload[0];
-	       else
-		 nxt_storeDATA2[dINDEX][63:32] = ccif.dload[0];
 	       nxt_storeTAG2[dINDEX] = dTAG;
 	       nxt_storeVALID2[dINDEX] = 1;
 	       nxt_storeDIRTY2[dINDEX] = 1;

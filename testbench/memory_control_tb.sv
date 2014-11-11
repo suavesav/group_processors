@@ -114,6 +114,7 @@ program test(input logic CLK, output logic nRST, cache_control_if.tb ccif, cpu_r
 	ccif.dstore[0] = 32'hDEADDEAD;
 	ccif.daddr[0] = 32'hBEEFBEEF;
 	ccif.cctrans[0] = 1;
+	ccif.ccwrite[0] = 1;
 	@(posedge CLK);
 	ccif.dWEN[1] = 1;
 	ccif.daddr[1] = 32'h10101010;
@@ -124,6 +125,7 @@ program test(input logic CLK, output logic nRST, cache_control_if.tb ccif, cpu_r
 	@(posedge CLK);
 	ccif.dWEN[1] = 0;
 	ccif.cctrans[0] = 0;
+	ccif.ccwrite[0] = 0;
 	@(posedge CLK);
 	@(posedge CLK);
 	ccif.dstore[0] = 32'hBEEBBEEB;
@@ -134,7 +136,26 @@ program test(input logic CLK, output logic nRST, cache_control_if.tb ccif, cpu_r
 	@(posedge CLK);
 
 	//TEST D READ COHERENCE
-	
+	ccif.dREN[1] = 1;
+	ccif.daddr[1] = 32'hBEEFBEAD;
+	ccif.cctrans[1] = 1;
+	@(posedge CLK);
+	ccif.dWEN[0] = 1;
+	ccif.daddr[0] = 32'hC0FFEEEE;
+	ccif.dstore[0] = 32'hDECADEDD;
+	ccif.ramstate = BUSY;
+	@(posedge CLK);
+	ccif.ramstate = ACCESS;
+	@(posedge CLK);
+	ccif.ramstate = BUSY;
+	ccif.daddr[0] = 32'hC4ADBAD4;
+	ccif.dstore[0] = 32'hDEFACED;
+	@(posedge CLK);
+	ccif.ramstate = ACCESS;
+	ccif.dWEN[0] = 0;
+	ccif.dREN[1] = 0;
+	@(posedge CLK);
+	@(posedge CLK);
 	
 	
 	

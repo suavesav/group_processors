@@ -73,6 +73,8 @@ module icache
 	    begin
 	       if(dcif.pcRST)
 		 nextstate = IDLE;
+	       else if(ccif.iwait[0])
+		 nextstate = READM;
 	       else
 		 nextstate = STORE;
 	    end
