@@ -356,10 +356,10 @@ module memory_control (
 		 end	       
 	       else
 		 begin
-		    ccif.dwait[0] = 0;
+		    ccif.dwait[0] = 1;
 		    ccif.iwait[0] = 0;
 		    ccif.iwait[1] = 0;
-		    ccif.dwait[1] = 0;
+		    ccif.dwait[1] = 1;
 		 end
 	    end // case: ACCESS
 	  default:

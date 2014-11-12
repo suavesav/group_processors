@@ -8,6 +8,8 @@ module icache
     datapath_cache_if.icache dcif,
     cache_control_if.icache ccif    
     );
+
+   parameter CPUID = 0;
    
    //INPUT VALUES
    logic [25:0] inTAG;
@@ -88,8 +90,8 @@ module icache
    //OUTPUT LOGIC
    always_comb
      begin
-	ccif.iREN[0] = 0;
-	ccif.iaddr[0] = '0;
+	ccif.iREN[CPUID] = 0;
+	ccif.iaddr[CPUID] = '0;
 	nxt_storeDATA = storeDATA;
 	nxt_storeTAG = storeTAG;
 	nxt_storeVALID = storeVALID;
@@ -97,13 +99,13 @@ module icache
 	casez(state)
 	  READM:
 	    begin
-	       ccif.iREN[0] = 1;
-	       ccif.iaddr[0] = dcif.imemaddr;
+	       ccif.iREN[CPUID] = 1;
+	       ccif.iaddr[CPUID] = dcif.imemaddr;
 	    end
 
 	  STORE:
 	    begin
-	       nxt_storeDATA[inINDEX] = ccif.iload[0];
+	       nxt_storeDATA[inINDEX] = ccif.iload[CPUID];
 	       nxt_storeTAG[inINDEX] = inTAG;
 	       nxt_storeVALID[inINDEX] = 1;
 	    end

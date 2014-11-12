@@ -8,6 +8,8 @@ module dcache
     datapath_cache_if.dcache dcif,
     cache_control_if.dcache ccif
     );
+
+   parameter CPUID = 0;
    
    //INPUT VALUES
    logic [25:0] dTAG;
@@ -23,6 +25,17 @@ module dcache
    assign dINDEX = inputADDR.idx;
    assign doffset = inputADDR.blkoff;
 
+   logic [25:0] ccTAG;
+   logic [2:0] 	ccINDEX;
+   logic 	ccoffset;
+
+   dcachef_t ccADDR;
+
+   assign ccADDR = ccif.ccsnoopaddr[CPUID];
+   assign ccTAG = ccADDR.tag;
+   assign ccINDEX = ccADDR.idx;
+   assign ccoffset = ccADDR.blkoff;
+   
    //DATA STORE BLOCKS
    logic [25:0] storeTAG1[7:0];
    logic [63:0] storeDATA1[7:0];
@@ -52,7 +65,7 @@ module dcache
    word_t nxt_HITcount;
    
 
-   typedef enum logic [4:0] {IDLE, READ1, READ2, READM, dirty1, READ1clean, dirty2, READ2clean, dirty1_2, dirty2_2, READ1clean2, READ2clean2, LOAD, WRITEM, WRITE1clean, WRITE2clean, WRITE1clean2, WRITE2clean2, HALTstate, WRITEHIT1, WRITEHIT2, FLUSHED1, FLUSHED2, FLUSHED3, FLUSHED4, FLUSHED, FLUSHEDi} STATE;
+   typedef enum logic [4:0] {IDLE, READ1, READ2, READM, dirty1, READ1clean, dirty2, READ2clean, dirty1_2, dirty2_2, READ1clean2, READ2clean2, LOAD, WRITEM, WRITE1clean, WRITE2clean, WRITE1clean2, WRITE2clean2, HALTstate, WRITEHIT1, WRITEHIT2, FLUSHED1, FLUSHED2, FLUSHED3, FLUSHED4, FLUSHED, FLUSHEDi, CCcheck, CCcheck1, CCcheck2} STATE;
    
    STATE 	state, nextstate;
    
@@ -99,109 +112,159 @@ module dcache
 	casez(state)
 	  IDLE:
 	    begin
-	       if(dcif.dmemREN)
+	       if(!ccif.ccwait[CPUID])
 		 begin
-		    if((dTAG != storeTAG1[dINDEX] || !storeVALID1[dINDEX]) && (dTAG != storeTAG2[dINDEX] || !storeVALID2[dINDEX])) 
+		    if(dcif.dmemREN)
 		      begin
-			 if(!LRUon1[dINDEX])
+			 if((dTAG != storeTAG1[dINDEX] || !storeVALID1[dINDEX]) && (dTAG != storeTAG2[dINDEX] || !storeVALID2[dINDEX])) 
 			   begin
-			      if(storeDIRTY1[dINDEX])
-				nextstate = dirty1;
+			      if(!LRUon1[dINDEX])
+				begin
+				   if(storeDIRTY1[dINDEX])
+				     nextstate = dirty1;
+				   else
+				     nextstate = READM;
+				end
 			      else
-				nextstate = READM;
+				begin
+				   if(storeDIRTY2[dINDEX])
+				     nextstate = dirty2;
+				   else
+				     nextstate = READM;
+				end // else: !if(!LRUon1[dINDEX])
 			   end
-			 else
-			   begin
-			      if(storeDIRTY2[dINDEX])
-				nextstate = dirty2;
-			      else
-				nextstate = READM;
-			   end // else: !if(!LRUon1[dINDEX])
 		      end
-		 end
-	       else if(dcif.dmemWEN)
-		 begin
-		    if((dTAG != storeTAG1[dINDEX] || !storeVALID1[dINDEX]) && (dTAG != storeTAG2[dINDEX] || !storeVALID2[dINDEX]))
+		    else if(dcif.dmemWEN)
 		      begin
-			 if(!LRUon1[dINDEX])
+			 if((dTAG != storeTAG1[dINDEX] || !storeVALID1[dINDEX]) && (dTAG != storeTAG2[dINDEX] || !storeVALID2[dINDEX]))
 			   begin
-			      if(storeDIRTY1[dINDEX])
-				nextstate = dirty1;
+			      if(!LRUon1[dINDEX])
+				begin
+				   if(storeDIRTY1[dINDEX])
+				     nextstate = dirty1;
+				   else
+				     nextstate = WRITEM;
+				end
 			      else
-				nextstate = WRITEM;
-			   end
+				begin
+				   if(storeDIRTY2[dINDEX])
+				     nextstate = dirty2;
+				   else
+				     nextstate = WRITEM;
+				end // else: !if(!LRUon1[dINDEX])
+			   end		
 			 else
 			   begin
-			      if(storeDIRTY2[dINDEX])
-				nextstate = dirty2;
+			      if(dTAG == storeTAG1[dINDEX] && storeVALID1[dINDEX])
+				nextstate = WRITEHIT1;
 			      else
-				nextstate = WRITEM;
-			   end // else: !if(!LRUon1[dINDEX])
-		      end		
+				nextstate = WRITEHIT2;
+			   end
+		      end // if (dcif.dmemWEN)
+		    else if(dcif.halt)
+		      nextstate = HALTstate;
 		    else
-		      begin
-			 if(dTAG == storeTAG1[dINDEX] && storeVALID1[dINDEX])
-			   nextstate = WRITEHIT1;
-			 else
-			   nextstate = WRITEHIT2;
-		      end
-		 end // if (dcif.dmemWEN)
-	       else if(dcif.halt)
-		 nextstate = HALTstate;
+		      nextstate = IDLE;
+		 end // if (!ccif.ccwait[CPUID])
 	       else
-		 nextstate = IDLE;
+		 begin
+		    if(ccTAG == storeTAG1[ccINDEX] || ccTAG == storeTAG2[ccINDEX])
+		      nextstate = CCcheck;
+		    else
+		      nextstate = IDLE;
+		 end
 	    end // case: IDLE
 
 	  READM:
 	    begin
-	       if(!LRUon1[dINDEX])
+	       if(!ccif.ccwait[CPUID])
 		 begin
-		    if(!ccif.dwait[0])
-		      nextstate = READ1clean;
+		    if(!LRUon1[dINDEX])
+		      begin
+			 if(!ccif.dwait[CPUID])
+			   nextstate = READ1clean;
+			 else
+			   nextstate = READM;
+		      end
 		    else
-		      nextstate = READM;
-		 end
+		      begin
+			 if(!ccif.dwait[CPUID])
+			   nextstate = READ2clean;
+			 else
+			   nextstate = READM;
+		      end
+		 end // if (!ccwait[CPUID])
 	       else
 		 begin
-		    if(!ccif.dwait[0])
-		      nextstate = READ2clean;
+		    if(ccTAG == storeTAG1[ccINDEX] || ccTAG == storeTAG2[ccINDEX])
+		      nextstate = CCcheck;
 		    else
-		      nextstate = READM;
+		      nextstate = IDLE;
 		 end
 	    end
 	  
 	  READ1clean:
 	    begin
-	       if(!ccif.dwait[0])
-		 nextstate = READ1clean2;
+	       if(!ccif.ccwait[CPUID])
+		 begin
+		    if(!ccif.dwait[CPUID])
+		      nextstate = READ1clean2;
+		    else
+		      nextstate = READ1clean;
+		 end
 	       else
-		 nextstate = READ1clean;
+		 begin
+		    if(ccTAG == storeTAG1[ccINDEX] || ccTAG == storeTAG2[ccINDEX])
+		      nextstate = CCcheck;
+		    else
+		      nextstate = IDLE;
+		 end
 	    end
 
 	  READ1clean2:
 	    begin
-	       //if(!ccif.dwait[0])
-	       nextstate = LOAD;
-	       //else
-		// nextstate = READ1clean2;
+	       if(!ccif.ccwait[CPUID])
+		 nextstate = LOAD;
+	       else
+		 begin
+		    if(ccTAG == storeTAG1[ccINDEX] || ccTAG == storeTAG2[ccINDEX])
+		      nextstate = CCcheck;
+		    else
+		      nextstate = IDLE;
+		 end
 	    end
-	  
+	       	  
 	  READ2clean:
 	    begin
-	       if(!ccif.dwait[0])
-		 nextstate = READ2clean2;
+	       if(!ccif.ccwait[CPUID])
+		 begin
+		    if(!ccif.dwait[CPUID])
+		      nextstate = READ2clean2;
+		    else
+		      nextstate = READ2clean;
+		 end
 	       else
-		 nextstate = READ2clean;
+		 begin
+		    if(ccTAG == storeTAG1[ccINDEX] || ccTAG == storeTAG2[ccINDEX])
+		      nextstate = CCcheck;
+		    else
+		      nextstate = IDLE;
+		 end
 	    end
 	  
 	  READ2clean2:
 	    begin
-	       //if(!ccif.dwait[0])
-	       nextstate = LOAD;
-	       //else
-		 //nextstate = READ2clean2;
+	       if(!ccif.ccwait[CPUID])
+		 nextstate = LOAD;
+	       else
+		 begin
+		    if(ccTAG == storeTAG1[ccINDEX] || ccTAG == storeTAG2[ccINDEX])
+		      nextstate = CCcheck;
+		    else
+		      nextstate = IDLE;
+		 end
 	    end
-
+	  
 	  WRITEHIT1:
 	    nextstate = LOAD;
 
@@ -210,92 +273,182 @@ module dcache
 	  
 	  WRITEM:
 	    begin
-	       if(!LRUon1[dINDEX])
-		 nextstate = WRITE1clean;
+	       if(!ccif.ccwait[CPUID])
+		 begin
+		    if(!LRUon1[dINDEX])
+		      nextstate = WRITE1clean;
+		    else
+		      nextstate = WRITE2clean;
+		 end
 	       else
-		 nextstate = WRITE2clean;
+		 begin
+		    if(ccTAG == storeTAG1[ccINDEX] || ccTAG == storeTAG2[ccINDEX])
+		      nextstate = CCcheck;
+		    else
+		      nextstate = IDLE;
+		 end
 	    end
 
 	  WRITE1clean:
 	    begin
-	       if(!ccif.dwait[0])
-		 nextstate = WRITE1clean2;
+	       if(!ccif.ccwait[CPUID])
+		 begin
+		    if(!ccif.dwait[CPUID])
+		      nextstate = WRITE1clean2;
+		    else
+		      nextstate = WRITE1clean;
+		 end
 	       else
-		 nextstate = WRITE1clean;
+		 begin
+		    if(ccTAG == storeTAG1[ccINDEX] || ccTAG == storeTAG2[ccINDEX])
+		      nextstate = CCcheck;
+		    else
+		      nextstate = IDLE;
+		 end
 	    end
 
 	  WRITE1clean2:
 	    begin
-	       //if(!ccif.dwait[0])
-	       nextstate = LOAD;
-	       //else
-		 //nextstate = WRITE1clean2;
+	       if(!ccif.ccwait[CPUID])
+		 nextstate = LOAD;
+	       else
+		 begin
+		    if(ccTAG == storeTAG1[ccINDEX] || ccTAG == storeTAG2[ccINDEX])
+		      nextstate = CCcheck;
+		    else
+		      nextstate = IDLE;
+		 end
 	    end
-
+	       
 	  WRITE2clean:
 	    begin
-	       if(!ccif.dwait[0])
-		 nextstate = WRITE2clean2;
+	       if(!ccif.ccwait[CPUID])
+		 begin
+		    if(!ccif.dwait[CPUID])
+		      nextstate = WRITE2clean2;
+		    else
+		      nextstate = WRITE2clean;
+		 end
 	       else
-		 nextstate = WRITE2clean;
+		 begin
+		    if(ccTAG == storeTAG1[ccINDEX] || ccTAG == storeTAG2[ccINDEX])
+		      nextstate = CCcheck;
+		    else
+		      nextstate = IDLE;
+	       	 end // else: !if(!ccif.ccwait[CPUID])
 	    end
 	  
 	  WRITE2clean2:
 	    begin
-	       //if(!ccif.dwait[0])
-	       nextstate = LOAD;
-	       //else
-		 //nextstate = WRITE2clean2;
+	       if(!ccif.ccwait[CPUID])
+		 nextstate = LOAD;
+	       else
+		 begin
+		    if(ccTAG == storeTAG1[ccINDEX] || ccTAG == storeTAG2[ccINDEX])
+		      nextstate = CCcheck;
+		    else
+		      nextstate = IDLE;
+		 end
 	    end
-	  
+	   	  
 	  dirty1:
 	    begin
-	       if(!ccif.dwait[0])
-		 nextstate = dirty1_2;
+	       if(!ccif.ccwait[CPUID])
+		 begin
+		    if(!ccif.dwait[CPUID])
+		      nextstate = dirty1_2;
+		    else
+		      nextstate = dirty1;
+		 end
 	       else
-		 nextstate = dirty1;
+		 begin
+		    if(ccTAG == storeTAG1[ccINDEX] || ccTAG == storeTAG2[ccINDEX])
+		      nextstate = CCcheck;
+		    else
+		      nextstate = IDLE;
+		 end
 	    end
 	  
 	  dirty2:
 	    begin
-	       if(!ccif.dwait[0])
-		 nextstate = dirty2_2;
+	       if(!ccif.ccwait[CPUID])
+		 begin
+		    if(!ccif.dwait[CPUID])
+		      nextstate = dirty2_2;
+		    else
+		      nextstate = dirty2;
+		 end
 	       else
-		 nextstate = dirty2;
+		 begin
+		    if(ccTAG == storeTAG1[ccINDEX] || ccTAG == storeTAG2[ccINDEX])
+		      nextstate = CCcheck;
+		    else
+		      nextstate = IDLE;
+		 end
 	    end
 	  
 	  dirty1_2:
 	    begin
-	       if(!ccif.dwait[0])
+	       if(!ccif.ccwait[CPUID])
 		 begin
-		    if(dcif.dmemREN)
-		      nextstate = READM;
+		    if(!ccif.dwait[CPUID])
+		      begin
+			 if(dcif.dmemREN)
+			   nextstate = READM;
+			 else
+			   nextstate = WRITEM;
+		      end
 		    else
-		      nextstate = WRITEM;
-		 end
+		      nextstate = dirty1_2;
+		 end // if (!ccif.ccwait[CPUID])
 	       else
-		 nextstate = dirty1_2;
+		 begin
+		    if(ccTAG == storeTAG1[ccINDEX] || ccTAG == storeTAG2[ccINDEX])
+		      nextstate = CCcheck;
+		    else
+		      nextstate = IDLE;
+		 end
 	    end
 	  	  
 	  dirty2_2:
 	    begin
-	       if(!ccif.dwait[0])
+	       if(!ccif.ccwait[CPUID])
 		 begin
-		    if(dcif.dmemREN)
-		      nextstate = READM;
+		    if(!ccif.dwait[CPUID])
+		      begin
+			 if(dcif.dmemREN)
+			   nextstate = READM;
+			 else
+			   nextstate = WRITEM;
+		      end
 		    else
-		      nextstate = WRITEM;
-		 end
+		      nextstate = dirty2_2;
+		 end // if (!ccif.ccwait[CPUID])
 	       else
-		 nextstate = dirty2_2;
+		 begin
+		    if(ccTAG == storeTAG1[ccINDEX] || ccTAG == storeTAG2[ccINDEX])
+		      nextstate = CCcheck;
+		    else
+		      nextstate = IDLE;
+		 end
 	    end
 
 	  LOAD:
-	    nextstate = IDLE;
+	    begin
+	       if(!ccif.ccwait[CPUID])
+		 nextstate = IDLE;
+	       else
+		 begin
+		    if(ccTAG == storeTAG1[ccINDEX] || ccTAG == storeTAG2[ccINDEX])
+		      nextstate = CCcheck;
+		    else
+		      nextstate = IDLE;
+		 end
+	    end
    	  
 	  HALTstate:
 	    begin
-	       if(!ccif.dwait[0])
+	       if(!ccif.dwait[CPUID])
 		 nextstate = FLUSHED1;
 	       else
 		 nextstate = HALTstate;
@@ -305,7 +458,7 @@ module dcache
 	    begin
 	       if(storeDIRTY1[aINDEX])
 		 begin
-		    if(!ccif.dwait[0])
+		    if(!ccif.dwait[CPUID])
 		      nextstate = FLUSHED2;
 		    else
 		      nextstate = FLUSHED1;
@@ -316,7 +469,7 @@ module dcache
 
 	  FLUSHED2:
 	    begin
-	       if(!ccif.dwait[0])
+	       if(!ccif.dwait[CPUID])
 		 nextstate = FLUSHED3;
 	       else
 		 nextstate = FLUSHED2;
@@ -326,7 +479,7 @@ module dcache
 	    begin
 	       if(storeDIRTY2[aINDEX])
 		 begin
-		    if(!ccif.dwait[0])
+		    if(!ccif.dwait[CPUID])
 		      nextstate = FLUSHED4;
 		    else
 		      nextstate = FLUSHED3;
@@ -339,7 +492,7 @@ module dcache
 
 	  FLUSHED4:
 	    begin
-	       if(!ccif.dwait[0])
+	       if(!ccif.dwait[CPUID])
 		 begin
 		    if(aINDEX == 4'd8)
 		      nextstate = FLUSHED;
@@ -355,6 +508,43 @@ module dcache
 	  
 	  FLUSHED:
 	    nextstate = FLUSHED;
+
+	  CCcheck:
+	    begin
+	       if(ccTAG == storeTAG1[ccINDEX])
+		 begin
+		    if(!ccif.dwait[CPUID])
+		      nextstate = CCcheck1;
+		    else
+		      nextstate = CCcheck;
+		 end
+	       else if(ccTAG == storeTAG2[ccINDEX])
+		 begin
+		    if(!ccif.dwait[CPUID])
+		      nextstate = CCcheck2;
+		    else
+		      nextstate = CCcheck;
+		 end
+	       else
+		 nextstate = IDLE;
+	    end // case: CCcheck
+
+	  CCcheck1:
+	    begin
+	       if(!ccif.dwait[CPUID])
+		 nextstate = IDLE;
+	       else
+		 nextstate = CCcheck1;
+	    end
+
+	  CCcheck2:
+	    begin
+	       if(!ccif.dwait[CPUID])
+		 nextstate = IDLE;
+	       else
+		 nextstate = CCcheck2;
+	    end
+	  
 	  
 	endcase // casez (state)
      end // always_comb
@@ -362,10 +552,10 @@ module dcache
    //OUTPUT LOGIC
    always_comb
      begin
-	ccif.dREN[0] = 0;
-	ccif.dWEN[0] = 0;
-	ccif.daddr[0] = '0;
-	ccif.dstore[0] = dcif.dmemstore;
+	ccif.dREN[CPUID] = 0;
+	ccif.dWEN[CPUID] = 0;
+	ccif.daddr[CPUID] = '0;
+	ccif.dstore[CPUID] = dcif.dmemstore;
 	nxt_storeDATA1 = storeDATA1;
 	nxt_storeDATA2 = storeDATA2;
 	nxt_storeVALID1 = storeVALID1;
@@ -378,6 +568,8 @@ module dcache
 	nxt_HITcount = HITcount;
 	dcif.flushed = 0;
 	nxt_aINDEX = aINDEX;
+	ccif.ccwrite[CPUID] = 0;                  
+	ccif.cctrans[CPUID] = 0;                  
 	
 	casez(state)
 	  IDLE:
@@ -388,23 +580,40 @@ module dcache
 	  
 	  READM:
 	    begin
-	       ccif.dREN[0] = 1;
-	       ccif.daddr[0] = {dTAG,dINDEX,3'b000};
-	       if(!ccif.dwait[0])
+	       ccif.dREN[CPUID] = 1;
+	       ccif.daddr[CPUID] = {dTAG,dINDEX,3'b000};
+	       if(!ccif.dwait[CPUID])
 		 begin
 		    if(!LRUon1[dINDEX])
-		      nxt_storeDATA1[dINDEX][31:0] = ccif.dload[0];
+		      nxt_storeDATA1[dINDEX][31:0] = ccif.dload[CPUID];
 		    else
-		      nxt_storeDATA2[dINDEX][31:0] = ccif.dload[0];
+		      nxt_storeDATA2[dINDEX][31:0] = ccif.dload[CPUID];
+		 end
+	       if(storeVALID1[dINDEX])
+		 begin
+		    ccif.cctrans[CPUID] = 1;
+		    if(storeDIRTY1[dINDEX])
+		      ccif.ccwrite[CPUID] = 1;
+		 end
+	       else if(storeVALID2[dINDEX])
+		 begin
+		    ccif.cctrans[CPUID] = 1;
+		    if(storeDIRTY2[dINDEX])
+		      ccif.ccwrite[CPUID] = 1;
+		 end
+	       else
+		 begin
+		    ccif.cctrans[CPUID] = 0;
+		    ccif.ccwrite[CPUID] = 0;
 		 end
 	    end
 
 	  READ1clean:
 	    begin	       
-	       ccif.dREN[0] = 1;
-	       ccif.daddr[0] = {dTAG,dINDEX,3'b100};
-	       if(!ccif.dwait[0])
-		 nxt_storeDATA1[dINDEX][63:32] = ccif.dload[0];
+	       ccif.dREN[CPUID] = 1;
+	       ccif.daddr[CPUID] = {dTAG,dINDEX,3'b100};
+	       if(!ccif.dwait[CPUID])
+		 nxt_storeDATA1[dINDEX][63:32] = ccif.dload[CPUID];
 	    end
 
 	  READ1clean2: //DHIT SHOULD BE ASSERTED
@@ -413,16 +622,16 @@ module dcache
 	       nxt_storeVALID1[dINDEX] = 1;
 	       nxt_storeDIRTY1[dINDEX] = 0;
 	       nxt_LRUon1[dINDEX] = 1;
-	       ccif.daddr[0] = '0;
-	       ccif.dREN[0] = 0;
+	       ccif.daddr[CPUID] = '0;
+	       ccif.dREN[CPUID] = 0;
 	    end
 
 	  READ2clean:
 	    begin
-	       ccif.dREN[0] = 1;
-	       ccif.daddr[0] = {dTAG,dINDEX,3'b100};
-	       if(!ccif.dwait[0])
-		 nxt_storeDATA2[dINDEX][63:32] = ccif.dload[0];
+	       ccif.dREN[CPUID] = 1;
+	       ccif.daddr[CPUID] = {dTAG,dINDEX,3'b100};
+	       if(!ccif.dwait[CPUID])
+		 nxt_storeDATA2[dINDEX][63:32] = ccif.dload[CPUID];
 	    end // case: READ2clean
 
 	  READ2clean2: //DHIT should be asserted
@@ -431,11 +640,9 @@ module dcache
 	       nxt_storeVALID2[dINDEX] = 1;
 	       nxt_storeDIRTY2[dINDEX] = 0;
 	       nxt_LRUon1[dINDEX] = 0;
-	       //nxt_storeDATA2[dINDEX][63:32] = ccif.dload[0];
-	       ccif.daddr[0] = '0;
-	       ccif.dREN[0] = 0;
+	       ccif.daddr[CPUID] = '0;
+	       ccif.dREN[CPUID] = 0;
 	    end // case: READ2clean2
-
 	  
 	  WRITEHIT1:
 	    begin
@@ -458,21 +665,39 @@ module dcache
 	       if(doffset)
 		 begin
 		    nxt_storeDATA1[dINDEX][63:32] = dcif.dmemstore;
-		    ccif.daddr[0] = {dTAG,dINDEX,3'b000};
+		    ccif.daddr[CPUID] = {dTAG,dINDEX,3'b000};
 		 end
 	       else
 		 begin
 		    nxt_storeDATA1[dINDEX][31:0] = dcif.dmemstore;
-		    ccif.daddr[0] = {dTAG,dINDEX,3'b100};
+		    ccif.daddr[CPUID] = {dTAG,dINDEX,3'b100};
 		 end
-	       if(!ccif.dwait[0])
+	       if(!ccif.dwait[CPUID])
 		 begin
 		    if(doffset)
-	     	      nxt_storeDATA1[dINDEX][31:0] = ccif.dload[0];
+	     	      nxt_storeDATA1[dINDEX][31:0] = ccif.dload[CPUID];
 		    else
-		      nxt_storeDATA1[dINDEX][63:32] = ccif.dload[0];
+		      nxt_storeDATA1[dINDEX][63:32] = ccif.dload[CPUID];
 		 end
-	       ccif.dREN[0] = 1;
+	       ccif.dREN[CPUID] = 1;
+	       
+	       if(storeVALID1[dINDEX])
+		 begin
+		    ccif.cctrans[CPUID] = 1;
+		    if(storeDIRTY1[dINDEX])
+		      ccif.ccwrite[CPUID] = 1;
+		 end
+	       else if(storeVALID2[dINDEX])
+		 begin
+		    ccif.cctrans[CPUID] = 1;
+		    if(storeDIRTY2[dINDEX])
+		      ccif.ccwrite[CPUID] = 1;
+		 end
+	       else
+		 begin
+		    ccif.cctrans[CPUID] = 0;
+		    ccif.ccwrite[CPUID] = 0;
+		 end
 	    end // case: WRITE1clean
 
 	  WRITE1clean2:
@@ -481,8 +706,8 @@ module dcache
 	       nxt_storeVALID1[dINDEX] = 1;
 	       nxt_storeDIRTY1[dINDEX] = 1;
 	       nxt_LRUon1[dINDEX] = 1;
-	       ccif.daddr[0] = 0;
-	       ccif.dREN[0] = 0;
+	       ccif.daddr[CPUID] = 0;
+	       ccif.dREN[CPUID] = 0;
 	    end
 
 	  WRITE2clean:
@@ -490,21 +715,39 @@ module dcache
 	       if(doffset)
 		 begin
 		    nxt_storeDATA2[dINDEX][63:32] = dcif.dmemstore;
-		    ccif.daddr[0] = {dTAG,dINDEX,3'b000};
+		    ccif.daddr[CPUID] = {dTAG,dINDEX,3'b000};
 		 end
 	       else
 		 begin
 		    nxt_storeDATA2[dINDEX][31:0] = dcif.dmemstore;
-		    ccif.daddr[0] = {dTAG,dINDEX,3'b100};
+		    ccif.daddr[CPUID] = {dTAG,dINDEX,3'b100};
 		 end
-	       if(!ccif.dwait[0])
+	       if(!ccif.dwait[CPUID])
 		 begin
 		    if(doffset)
-	     	      nxt_storeDATA2[dINDEX][31:0] = ccif.dload[0];
+	     	      nxt_storeDATA2[dINDEX][31:0] = ccif.dload[CPUID];
 		    else
-		      nxt_storeDATA2[dINDEX][63:32] = ccif.dload[0];
+		      nxt_storeDATA2[dINDEX][63:32] = ccif.dload[CPUID];
 		 end
-	       ccif.dREN[0] = 1;
+	       ccif.dREN[CPUID] = 1;
+
+	       if(storeVALID1[dINDEX])
+		 begin
+		    ccif.cctrans[CPUID] = 1;
+		    if(storeDIRTY1[dINDEX])
+		      ccif.ccwrite[CPUID] = 1;
+		 end
+	       else if(storeVALID2[dINDEX])
+		 begin
+		    ccif.cctrans[CPUID] = 1;
+		    if(storeDIRTY2[dINDEX])
+		      ccif.ccwrite[CPUID] = 1;
+		 end
+	       else
+		 begin
+		    ccif.cctrans[CPUID] = 0;
+		    ccif.ccwrite[CPUID] = 0;
+		 end
 	    end // case: WRITE1clean
 
 	  WRITE2clean2:
@@ -513,37 +756,37 @@ module dcache
 	       nxt_storeVALID2[dINDEX] = 1;
 	       nxt_storeDIRTY2[dINDEX] = 1;
 	       nxt_LRUon1[dINDEX] = 0;
-	       ccif.daddr[0] = 0;
-	       ccif.dREN[0] = 0;
+	       ccif.daddr[CPUID] = 0;
+	       ccif.dREN[CPUID] = 0;
 	    end
 	  
 	  dirty1:
 	    begin
-	       ccif.dWEN[0] = 1;
-	       ccif.daddr[0] = {storeTAG1[dINDEX],dINDEX,3'b000};
-	       ccif.dstore[0] = storeDATA1[dINDEX][31:0];
+	       ccif.dWEN[CPUID] = 1;
+	       ccif.daddr[CPUID] = {storeTAG1[dINDEX],dINDEX,3'b000};
+	       ccif.dstore[CPUID] = storeDATA1[dINDEX][31:0];
 	    end
 
 	  dirty1_2:
 	    begin
-	       ccif.dWEN[0] = 1;
-	       ccif.daddr[0] = {storeTAG1[dINDEX],dINDEX,3'b100};
-	       ccif.dstore[0] = storeDATA1[dINDEX][63:32];
+	       ccif.dWEN[CPUID] = 1;
+	       ccif.daddr[CPUID] = {storeTAG1[dINDEX],dINDEX,3'b100};
+	       ccif.dstore[CPUID] = storeDATA1[dINDEX][63:32];
 	       nxt_storeDIRTY1[dINDEX] = 0;
 	    end
 	  
 	  dirty2:
 	    begin
-	       ccif.dWEN[0] = 1;
-	       ccif.daddr[0] = {storeTAG2[dINDEX],dINDEX,3'b000};
-	       ccif.dstore[0] = storeDATA2[dINDEX][31:0];
+	       ccif.dWEN[CPUID] = 1;
+	       ccif.daddr[CPUID] = {storeTAG2[dINDEX],dINDEX,3'b000};
+	       ccif.dstore[CPUID] = storeDATA2[dINDEX][31:0];
 	    end	  
 		  
 	  dirty2_2:
 	    begin
-	       ccif.dWEN[0] = 1;
-	       ccif.daddr[0] = {storeTAG2[dINDEX],dINDEX,3'b100};
-	       ccif.dstore[0] = storeDATA2[dINDEX][63:32];
+	       ccif.dWEN[CPUID] = 1;
+	       ccif.daddr[CPUID] = {storeTAG2[dINDEX],dINDEX,3'b100};
+	       ccif.dstore[CPUID] = storeDATA2[dINDEX][63:32];
 	       nxt_storeDIRTY2[dINDEX] = 0;
 	    end
 	  
@@ -551,43 +794,43 @@ module dcache
 	    begin
 	       nxt_storeVALID1 = '{default:0};
 	       nxt_storeVALID2 = '{default:0};
-	       ccif.dWEN[0] = 1;
-	       ccif.daddr[0] = 32'h3100;
-	       ccif.dstore[0] = HITcount;
+	       ccif.dWEN[CPUID] = 1;
+	       ccif.daddr[CPUID] = 32'h3100;
+	       ccif.dstore[CPUID] = HITcount;
 	    end
 	  
 	  FLUSHED1:
 	    begin
 	       if(storeDIRTY1[aINDEX])
 		 begin
-		    ccif.dWEN[0] = 1;
-		    ccif.dstore[0] = storeDATA1[aINDEX][63:32];
-		    ccif.daddr[0] = {storeTAG1[aINDEX],aINDEX[2:0],1'b1,2'b00};
+		    ccif.dWEN[CPUID] = 1;
+		    ccif.dstore[CPUID] = storeDATA1[aINDEX][63:32];
+		    ccif.daddr[CPUID] = {storeTAG1[aINDEX],aINDEX[2:0],1'b1,2'b00};
 		 end
 	    end // case: FLUSHED1
 
 	  FLUSHED2:
 	    begin
-	       ccif.dWEN[0] = 1;
-	       ccif.dstore[0] = storeDATA1[aINDEX][31:0];
-	       ccif.daddr[0] = {storeTAG1[aINDEX],aINDEX[2:0],1'b0,2'b00};
+	       ccif.dWEN[CPUID] = 1;
+	       ccif.dstore[CPUID] = storeDATA1[aINDEX][31:0];
+	       ccif.daddr[CPUID] = {storeTAG1[aINDEX],aINDEX[2:0],1'b0,2'b00};
 	    end
 
 	  FLUSHED3:
 	    begin
 	       if(storeDIRTY2[aINDEX])
 		 begin
-		    ccif.dWEN[0] = 1;
-		    ccif.dstore[0] = storeDATA2[aINDEX][63:32];
-		    ccif.daddr[0] = {storeTAG2[aINDEX],aINDEX[2:0],1'b1,2'b00};
+		    ccif.dWEN[CPUID] = 1;
+		    ccif.dstore[CPUID] = storeDATA2[aINDEX][63:32];
+		    ccif.daddr[CPUID] = {storeTAG2[aINDEX],aINDEX[2:0],1'b1,2'b00};
 		 end
 	    end
 
 	  FLUSHED4:
 	    begin
-	       ccif.dWEN[0] = 1;
-	       ccif.dstore[0] = storeDATA2[aINDEX][31:0];
-	       ccif.daddr[0] = {storeTAG2[aINDEX],aINDEX[2:0],1'b0,2'b00};
+	       ccif.dWEN[CPUID] = 1;
+	       ccif.dstore[CPUID] = storeDATA2[aINDEX][31:0];
+	       ccif.daddr[CPUID] = {storeTAG2[aINDEX],aINDEX[2:0],1'b0,2'b00};
 	    end
 
 	  FLUSHEDi:
@@ -595,6 +838,42 @@ module dcache
 	  
 	  FLUSHED:
 	    dcif.flushed = 1;
+
+	  CCcheck:
+	    begin
+	       if(ccTAG == storeTAG1[ccINDEX])
+		 begin
+		    ccif.dWEN[CPUID] = 1;
+		    ccif.daddr[CPUID] = {storeTAG1[ccINDEX],ccINDEX,3'b000};
+		    ccif.dstore[CPUID] = storeDATA1[ccINDEX][31:0];
+		 end
+	       else if(ccTAG == storeTAG2[ccINDEX])
+		 begin
+		    ccif.dWEN[CPUID] = 1;
+		    ccif.daddr[CPUID] = {storeTAG2[ccINDEX],ccINDEX,3'b000};
+		    ccif.dstore[CPUID] = storeDATA2[ccINDEX][31:0];
+		 end
+	    end // case: CCcheck
+
+	  CCcheck1:
+	    begin
+	       ccif.dWEN[CPUID] = 1;
+	       ccif.daddr[CPUID] = {storeTAG1[ccINDEX],ccINDEX,3'b100};
+	       ccif.dstore[CPUID] = storeDATA1[ccINDEX][63:32];
+	       nxt_storeDIRTY1[ccINDEX] = 0;
+	       if(ccif.ccinv[CPUID])
+		 nxt_storeVALID1[ccINDEX] = 0;
+	    end
+
+	  CCcheck2:
+	    begin
+	       ccif.dWEN[CPUID] = 1;
+	       ccif.daddr[CPUID] = {storeTAG2[ccINDEX],ccINDEX,3'b100};
+	       ccif.dstore[CPUID] = storeDATA2[ccINDEX][63:32];
+	       nxt_storeDIRTY2[ccINDEX] = 0;
+	       if(ccif.ccinv[CPUID])
+		 nxt_storeVALID2[ccINDEX] = 0;
+	    end
 	  
 	endcase // casez (state)
      end // always_comb
