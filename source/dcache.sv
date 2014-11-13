@@ -8,7 +8,7 @@ module dcache
     datapath_cache_if.dcache dcif,
     cache_control_if.dcache ccif
     );
-   parameter CPUID;
+   parameter CPUID = 0;
    
    //INPUT VALUES
    logic [25:0] dTAG;
@@ -640,7 +640,7 @@ module dcache
 	       nxt_storeDIRTY2[dINDEX] = 0;
 	       nxt_LRUon1[dINDEX] = 0;
 	       ccif.daddr[CPUID] = '0;
-	       ccif.dREN[CPUID] = 0;
+	       ccif.dREN[CPUID] = 0;	       
 	    end // case: READ2clean2
 	  
 	  WRITEHIT1:
@@ -840,7 +840,6 @@ module dcache
 
 	  CCcheck:
 	    begin
-	       ccif.dWEN[CPUID] = 1;
 	       if(ccTAG == storeTAG1[ccINDEX])
 		 begin
 		    ccif.dWEN[CPUID] = 1;

@@ -11,7 +11,7 @@ module caches (
 	      datapath_cache_if dcif,
 	      cache_control_if ccif	       
 );
-  parameter CPUID;
+  parameter CPUID = 0;
 
   // icache
   icache #(.CPUID(CPUID)) ICACHE(CLK, nRST, dcif, ccif);

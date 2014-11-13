@@ -24,7 +24,7 @@ module memory_control (
   parameter CPUS = 2;
 
 
-   typedef enum logic [3:0] {IDLE, BUSRD0, BUSRD1, BUSRDX0, BUSRDX1, RAMRD0, RAMWR0, RAMRD1, RAMWR1, RAMRDI0, RAMRDI1} STATE;
+   typedef enum logic [3:0] {IDLE, BUSRD0, WRD0, BUSRD1, WRD1, BUSRDX0, WRDX0, BUSRDX1, WRDX1, RAMRD0, RAMWR0, RAMRD1, RAMWR1, RAMRDI0, RAMRDI1} STATE;
 
    STATE state,nextstate;
 
@@ -51,9 +51,9 @@ module memory_control (
 	       if(ccif.dREN[0] || ccif.dWEN[0])
 		 begin
 		    if(ccif.cctrans[0] && !ccif.ccwrite[0])
-		      nextstate = BUSRD0;
+		      nextstate = WRD0; //BUSRD0;
 		    else if(ccif.cctrans[0] && ccif.ccwrite[0])
-		      nextstate = BUSRDX0;
+		      nextstate = WRDX0; //BUSRDX0;
 		    else
 		      begin
 			 if(ccif.dREN[0])
@@ -65,9 +65,9 @@ module memory_control (
 	       else if(ccif.dREN[1] || ccif.dWEN[1])
 		 begin
 		    if(ccif.cctrans[1] && !ccif.ccwrite[1])
-		      nextstate = BUSRD1;
+		      nextstate = WRD1; //BUSRD1;
 		    else if(ccif.cctrans[1] && ccif.ccwrite[1])
-		      nextstate = BUSRDX1;
+		      nextstate = WRDX1; //BUSRDX1;
 		    else
 		      begin
 			 if(ccif.dREN[1])
@@ -84,8 +84,8 @@ module memory_control (
 		 nextstate = IDLE;
 	    end // case: IDLE
 
-	  //WRD0:
-	    //nextstate = BUSRD0;
+	  WRD0:
+	    nextstate = BUSRD0;
 	  
 	  BUSRD0:
 	    begin
@@ -102,8 +102,8 @@ module memory_control (
 		 nextstate = BUSRD0;
 	    end 
 
-	  //WRDX0:
-	    //nextstate = BUSRDX0;
+	  WRDX0:
+	    nextstate = BUSRDX0;
 	  
 	  BUSRDX0:
 	    begin
@@ -120,8 +120,8 @@ module memory_control (
 		 nextstate = BUSRDX0;
 	    end 
 
-	  //WRD1:
-	    //nextstate = BUSRD1;
+	  WRD1:
+	    nextstate = BUSRD1;
 	  
 	  BUSRD1:
 	    begin
@@ -138,8 +138,8 @@ module memory_control (
 		 nextstate = BUSRD1;
 	    end
 
-	  //WRDX1:
-	    //nextstate = BUSRDX1;
+	  WRDX1:
+	    nextstate = BUSRDX1;
 	  
 	  BUSRDX1:
 	    begin
@@ -153,7 +153,7 @@ module memory_control (
 		      nextstate = IDLE;
 		 end
 	       else
-	       nextstate = BUSRDX1;
+		 nextstate = BUSRDX1;
 	    end // case: BUSRDX1
 
 	  RAMRD0:
@@ -228,11 +228,11 @@ module memory_control (
 	ccif.ccsnoopaddr[1] = '0;
 
 	casez(state)
-	  /*WRD0:
+	  WRD0:
 	    begin
 	       ccif.ccwait[1] = 1;
 	       ccif.ccsnoopaddr[1] = ccif.daddr[0];
-	    end*/
+	    end
 	       
 	  BUSRD0:
 	    begin
@@ -245,12 +245,12 @@ module memory_control (
 		 ccif.dload[0] = ccif.dstore[1];
 	    end
 
-	  /*WRDX0:
+	  WRDX0:
 	    begin
 	       ccif.ccwait[1] = 1;
 	       ccif.ccsnoopaddr[1] = ccif.daddr[0];
 	       ccif.ccinv[1] = 1;
-	    end*/
+	    end
 	       
 	  BUSRDX0:
 	    begin
@@ -264,11 +264,11 @@ module memory_control (
 		 ccif.dload[0] = ccif.dstore[1];
 	    end
 
-	  /*WRD1:
+	  WRD1:
 	    begin
 	       ccif.ccwait[0] = 1;
 	       ccif.ccsnoopaddr[0] = ccif.daddr[1];
-	    end*/
+	    end
 	       
 	  BUSRD1:
 	    begin
@@ -281,12 +281,12 @@ module memory_control (
 		 ccif.dload[1] = ccif.dstore[0];
 	    end
 
-	  /*WRDX1:
+	  WRDX1:
 	    begin
 	       ccif.ccwait[0] = 1;
 	       ccif.ccsnoopaddr[0] = ccif.daddr[1];
 	       ccif.ccinv[0] = 1;
-	    end*/
+	    end
 	       
 	  BUSRDX1:
 	    begin
@@ -298,6 +298,7 @@ module memory_control (
 	       ccif.ramstore = ccif.dstore[0];
 	       if(ccif.dREN[1] && ccif.dWEN[0])
 		 ccif.dload[1] = ccif.dstore[0];
+	       
 	    end
 	 
 	  RAMRD0:
