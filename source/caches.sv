@@ -6,21 +6,17 @@
 */
 
 
-module caches (
+module caches (	 
   input logic CLK, nRST,
-  datapath_cache_if dcif,
-  cache_control_if ccif
-  //datapath_cache_if.icache idcif,
-  //cache_control_if.icache iccif,
-  //datapath_cache_if.dcache ddcif,
-  //cache_control_if.dcache dccif	       
+	      datapath_cache_if dcif,
+	      cache_control_if ccif	       
 );
-  parameter CPUID = 0;
+  parameter CPUID;
 
   // icache
-  icache  ICACHE(CLK, nRST, dcif, ccif);
+  icache #(.CPUID(CPUID)) ICACHE(CLK, nRST, dcif, ccif);
   // dcache
-  dcache  DCACHE(CLK, nRST, dcif, ccif);
+  dcache #(.CPUID(CPUID))  DCACHE(CLK, nRST, dcif, ccif);
 
   // dcache invalidate before halt handled by dcache when exists
   //assign dcif.flushed = dcif.halt;

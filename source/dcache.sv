@@ -8,8 +8,7 @@ module dcache
     datapath_cache_if.dcache dcif,
     cache_control_if.dcache ccif
     );
-
-   parameter CPUID = 0;
+   parameter CPUID;
    
    //INPUT VALUES
    logic [25:0] dTAG;
@@ -526,7 +525,7 @@ module dcache
 		      nextstate = CCcheck;
 		 end
 	       else
-		 nextstate = IDLE;
+	       nextstate = IDLE;
 	    end // case: CCcheck
 
 	  CCcheck1:
@@ -589,16 +588,16 @@ module dcache
 		    else
 		      nxt_storeDATA2[dINDEX][31:0] = ccif.dload[CPUID];
 		 end
-	       if(storeVALID1[dINDEX])
+	       if(!storeVALID1[dINDEX])
 		 begin
 		    ccif.cctrans[CPUID] = 1;
-		    if(storeDIRTY1[dINDEX])
+		    if(!storeDIRTY1[dINDEX])
 		      ccif.ccwrite[CPUID] = 1;
 		 end
-	       else if(storeVALID2[dINDEX])
+	       else if(!storeVALID2[dINDEX])
 		 begin
 		    ccif.cctrans[CPUID] = 1;
-		    if(storeDIRTY2[dINDEX])
+		    if(!storeDIRTY2[dINDEX])
 		      ccif.ccwrite[CPUID] = 1;
 		 end
 	       else
@@ -681,16 +680,16 @@ module dcache
 		 end
 	       ccif.dREN[CPUID] = 1;
 	       
-	       if(storeVALID1[dINDEX])
+	       if(!storeVALID1[dINDEX])
 		 begin
 		    ccif.cctrans[CPUID] = 1;
-		    if(storeDIRTY1[dINDEX])
+		    if(!storeDIRTY1[dINDEX])
 		      ccif.ccwrite[CPUID] = 1;
 		 end
-	       else if(storeVALID2[dINDEX])
+	       else if(!storeVALID2[dINDEX])
 		 begin
 		    ccif.cctrans[CPUID] = 1;
-		    if(storeDIRTY2[dINDEX])
+		    if(!storeDIRTY2[dINDEX])
 		      ccif.ccwrite[CPUID] = 1;
 		 end
 	       else
@@ -841,6 +840,7 @@ module dcache
 
 	  CCcheck:
 	    begin
+	       ccif.dWEN[CPUID] = 1;
 	       if(ccTAG == storeTAG1[ccINDEX])
 		 begin
 		    ccif.dWEN[CPUID] = 1;

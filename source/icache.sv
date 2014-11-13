@@ -8,8 +8,7 @@ module icache
     datapath_cache_if.icache dcif,
     cache_control_if.icache ccif    
     );
-
-   parameter CPUID = 0;
+   parameter CPUID;
    
    //INPUT VALUES
    logic [25:0] inTAG;
@@ -75,7 +74,7 @@ module icache
 	    begin
 	       if(dcif.pcRST)
 		 nextstate = IDLE;
-	       else if(ccif.iwait[0])
+	       else if(ccif.iwait[CPUID])
 		 nextstate = READM;
 	       else
 		 nextstate = STORE;

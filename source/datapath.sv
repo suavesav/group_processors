@@ -18,7 +18,7 @@ module datapath (
 		 );
    import cpu_types_pkg::*;
 
-   parameter PC_INIT = 0;
+   parameter PC_INIT;
 
    //Interface instances
    register_file_if rfif();
@@ -38,7 +38,7 @@ module datapath (
    word_t       iaddr, addr, temp_addr;
 
    //MODPORTS
-   PC PC(CLK, nRST, pcWEN, addr, iaddr);
+   PC #(.PC_INIT(PC_INIT)) PC(CLK, nRST, pcWEN, addr, iaddr);
    register_file RF(CLK, nRST, rfif);
    ALU ALU(aluif);
    control_unit CU(cuif);
