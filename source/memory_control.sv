@@ -84,6 +84,9 @@ module memory_control (
 		 nextstate = IDLE;
 	    end // case: IDLE
 
+	  //WRD0:
+	    //nextstate = BUSRD0;
+	  
 	  BUSRD0:
 	    begin
 	       if(!ccif.dWEN[1])
@@ -99,6 +102,9 @@ module memory_control (
 		 nextstate = BUSRD0;
 	    end 
 
+	  //WRDX0:
+	    //nextstate = BUSRDX0;
+	  
 	  BUSRDX0:
 	    begin
 	       if(!ccif.dWEN[1])
@@ -114,6 +120,9 @@ module memory_control (
 		 nextstate = BUSRDX0;
 	    end 
 
+	  //WRD1:
+	    //nextstate = BUSRD1;
+	  
 	  BUSRD1:
 	    begin
 	       if(!ccif.dWEN[0])
@@ -129,6 +138,9 @@ module memory_control (
 		 nextstate = BUSRD1;
 	    end
 
+	  //WRDX1:
+	    //nextstate = BUSRDX1;
+	  
 	  BUSRDX1:
 	    begin
 	       if(!ccif.dWEN[0])
@@ -141,7 +153,7 @@ module memory_control (
 		      nextstate = IDLE;
 		 end
 	       else
-		 nextstate = BUSRDX1;
+	       nextstate = BUSRDX1;
 	    end // case: BUSRDX1
 
 	  RAMRD0:
@@ -216,6 +228,12 @@ module memory_control (
 	ccif.ccsnoopaddr[1] = '0;
 
 	casez(state)
+	  /*WRD0:
+	    begin
+	       ccif.ccwait[1] = 1;
+	       ccif.ccsnoopaddr[1] = ccif.daddr[0];
+	    end*/
+	       
 	  BUSRD0:
 	    begin
 	       ccif.ccwait[1] = 1;
@@ -227,6 +245,13 @@ module memory_control (
 		 ccif.dload[0] = ccif.dstore[1];
 	    end
 
+	  /*WRDX0:
+	    begin
+	       ccif.ccwait[1] = 1;
+	       ccif.ccsnoopaddr[1] = ccif.daddr[0];
+	       ccif.ccinv[1] = 1;
+	    end*/
+	       
 	  BUSRDX0:
 	    begin
 	       ccif.ccwait[1] = 1;
@@ -239,6 +264,12 @@ module memory_control (
 		 ccif.dload[0] = ccif.dstore[1];
 	    end
 
+	  /*WRD1:
+	    begin
+	       ccif.ccwait[0] = 1;
+	       ccif.ccsnoopaddr[0] = ccif.daddr[1];
+	    end*/
+	       
 	  BUSRD1:
 	    begin
 	       ccif.ccwait[0] = 1;
@@ -249,7 +280,14 @@ module memory_control (
 	       if(ccif.dREN[1] && ccif.dWEN[0])
 		 ccif.dload[1] = ccif.dstore[0];
 	    end
-	  
+
+	  /*WRDX1:
+	    begin
+	       ccif.ccwait[0] = 1;
+	       ccif.ccsnoopaddr[0] = ccif.daddr[1];
+	       ccif.ccinv[0] = 1;
+	    end*/
+	       
 	  BUSRDX1:
 	    begin
 	       ccif.ccwait[0] = 1;
@@ -319,21 +357,21 @@ module memory_control (
 	    end
 	  ACCESS:
 	    begin
-	       if((ccif.dREN[0] || ccif.dWEN[0]) && (!ccif.dREN[1] && !ccif.dWEN[1]))
+	       if((ccif.dREN[0] || ccif.dWEN[0]) && ((state == RAMRD0) || (state == RAMWR0)))
 		 begin
 		    ccif.dwait[0] = 0;
 		    ccif.iwait[0] = 1;
 		    ccif.iwait[1] = 1;
 		    ccif.dwait[1] = 1;
 		 end
-	       else if((ccif.dREN[1] || ccif.dWEN[1]) && (!ccif.dREN[0] && !ccif.dWEN[0]))
+	       else if((ccif.dREN[1] || ccif.dWEN[1]) && ((state == RAMRD1) || (state == RAMWR1)))
 		 begin
 		    ccif.dwait[0] = 1;
 		    ccif.iwait[0] = 1;
 		    ccif.iwait[1] = 1;
 		    ccif.dwait[1] = 0;
 		 end
-	       else if((ccif.dREN[0] && ccif.dWEN[1]) || (ccif.dREN[1] && ccif.dWEN[0]))
+	       else if((ccif.dREN[0] && ccif.dWEN[1]) || (ccif.dREN[1] && ccif.dWEN[0]) && !(state == RAMRDI0) && !(state == RAMRDI1))
 		 begin
 		    ccif.dwait[0] = 0;
 		    ccif.iwait[0] = 1;
@@ -354,12 +392,26 @@ module memory_control (
 		    ccif.iwait[1] = 1;
 		    ccif.dwait[1] = 1;
 		 end	       
+	       else if(ccif.iREN[0] && state == RAMRDI0)
+		 begin
+		    ccif.dwait[0] = 1;
+		    ccif.iwait[0] = 0;
+		    ccif.iwait[1] = 1;
+		    ccif.dwait[1] = 1;	   
+		 end
+	       else if(ccif.iREN[1] && state == RAMRDI1)
+		 begin
+		    ccif.dwait[0] = 1;
+		    ccif.iwait[0] = 1;
+		    ccif.iwait[1] = 0;
+		    ccif.dwait[1] = 1;
+		 end
 	       else
 		 begin
-		    ccif.dwait[0] = 0;
-		    ccif.iwait[0] = 0;
-		    ccif.iwait[1] = 0;
-		    ccif.dwait[1] = 0;
+		    ccif.dwait[0] = 1;
+		    ccif.iwait[0] = 1;
+		    ccif.iwait[1] = 1;
+		    ccif.dwait[1] = 1;
 		 end
 	    end // case: ACCESS
 	  default:

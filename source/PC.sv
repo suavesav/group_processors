@@ -10,11 +10,12 @@ module PC
    input word_t addr,
    output word_t iaddr
    );
-
+   parameter PC_INIT;
+   
    always_ff @ (posedge CLK, negedge nRST)
      begin
 	if(!nRST)
-	  iaddr <= '0;
+	  iaddr <= PC_INIT;
 	else if(pcWEN)
 	  begin
 	     iaddr <= addr;

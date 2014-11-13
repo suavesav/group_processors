@@ -63,9 +63,15 @@ program test(input logic CLK, output logic nRST, datapath_cache_if.dtb dcif, cac
 	dcif.dmemWEN = 0;
 	dcif.dmemstore = '0;
 	dcif.dmemaddr = '0;
-	ccif.dwait = 1;
+	ccif.dwait[0] = 1;
 	ccif.dload[0] = 32'd0;
 	ccif.dload[1] = 32'd0;
+	ccif.ccwait[0] = 0;
+	ccif.ccinv[0] = 0;
+	ccif.ccsnoopaddr[0] = 32'd0;
+	ccif.ccwait[1] = 0;
+	ccif.ccinv[1] = 0;
+	ccif.ccsnoopaddr[1] = 32'd0;
 	
 
 	//LOAD A VALUE OFFSET 0
@@ -78,19 +84,38 @@ program test(input logic CLK, output logic nRST, datapath_cache_if.dtb dcif, cac
 
 	@(posedge CLK);
 	@(posedge CLK);
+	ccif.dwait[0] = 0;
+	@(posedge CLK);
+	ccif.dwait[0] = 1;
 	ccif.dload[0] = 32'hDEADBEEF;
 	@(posedge CLK);
 	@(posedge CLK);
+	ccif.dwait[0] = 0;
 	@(posedge CLK);
-
+	ccif.dwait[0] = 1;
+	dcif.dmemREN = 0;
+	@(posedge CLK);
+	@(posedge CLK);
+	@(posedge CLK);
+	
+	
 	//LOAD A 2ND VALUE OFFSET 1
 	dcif.dmemREN = 1;
 	dcif.dmemaddr = {26'b11001100110000000000000000,3'b110,1'b1,2'b00};
 	ccif.dload[0] = 32'hBEEEFEEF;
 
+        @(posedge CLK);
 	@(posedge CLK);
+	ccif.dwait[0] = 0;
 	@(posedge CLK);
+	ccif.dwait[0] = 1;
 	ccif.dload[0] = 32'hDEADDEAD;
+	@(posedge CLK);
+	@(posedge CLK);
+	ccif.dwait[0] = 0;
+	@(posedge CLK);
+	ccif.dwait[0] = 1;
+	dcif.dmemREN = 0;
 	@(posedge CLK);
 	@(posedge CLK);
 	@(posedge CLK);
@@ -102,7 +127,18 @@ program test(input logic CLK, output logic nRST, datapath_cache_if.dtb dcif, cac
 
 	@(posedge CLK);
 	@(posedge CLK);
-	ccif.dload[0] = 32'hBEEFFEED;
+	@(posedge CLK);
+	@(posedge CLK);
+	ccif.dwait[0] = 0;
+	@(posedge CLK);
+	ccif.dwait[0] = 1;
+	ccif.dload[0] = 32'hDEADBEEF;
+	@(posedge CLK);
+	@(posedge CLK);
+	ccif.dwait[0] = 0;
+	@(posedge CLK);
+	ccif.dwait[0] = 1;
+	dcif.dmemREN = 0;
 	@(posedge CLK);
 	@(posedge CLK);
 	@(posedge CLK);
@@ -126,9 +162,18 @@ program test(input logic CLK, output logic nRST, datapath_cache_if.dtb dcif, cac
 	dcif.dmemaddr = {26'b10101010101010101010101010,3'b001,1'b0,2'b00};	
 	dcif.dmemstore = 32'hBEDDDEAD;
 	
+        @(posedge CLK);
 	@(posedge CLK);
+	ccif.dwait[0] = 0;
 	@(posedge CLK);
+	ccif.dwait[0] = 1;
 	ccif.dload[0] = 32'hAAAAAAAA;
+	@(posedge CLK);
+	@(posedge CLK);
+	ccif.dwait[0] = 0;
+	@(posedge CLK);
+	ccif.dwait[0] = 1;
+	dcif.dmemWEN = 0;
 	@(posedge CLK);
 	@(posedge CLK);
 	@(posedge CLK);
