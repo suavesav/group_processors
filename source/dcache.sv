@@ -6,7 +6,7 @@ module dcache
    (
     input logic CLK, nRST,
     datapath_cache_if.dcache dcif,
-    cache_control_if.dcache ccif
+    cache_control_if ccif
     );
    parameter CPUID = 0;
    

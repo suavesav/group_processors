@@ -6,7 +6,7 @@ module icache
    (
     input logic CLK, nRST,
     datapath_cache_if.icache dcif,
-    cache_control_if.icache ccif    
+    cache_control_if ccif    
     );
    parameter CPUID;
    
