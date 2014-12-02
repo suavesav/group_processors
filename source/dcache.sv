@@ -845,12 +845,16 @@ module dcache
 		    ccif.dWEN[CPUID] = 1;
 		    ccif.daddr[CPUID] = {storeTAG1[ccINDEX],ccINDEX,3'b000};
 		    ccif.dstore[CPUID] = storeDATA1[ccINDEX][31:0];
+		    if(ccif.ccinv[CPUID])
+		      nxt_storeVALID1[ccINDEX] = 0;
 		 end
 	       else if(ccTAG == storeTAG2[ccINDEX])
 		 begin
 		    ccif.dWEN[CPUID] = 1;
 		    ccif.daddr[CPUID] = {storeTAG2[ccINDEX],ccINDEX,3'b000};
 		    ccif.dstore[CPUID] = storeDATA2[ccINDEX][31:0];
+		    if(ccif.ccinv[CPUID])
+		      nxt_storeVALID2[ccINDEX] = 0;
 		 end
 	    end // case: CCcheck
 
@@ -860,8 +864,7 @@ module dcache
 	       ccif.daddr[CPUID] = {storeTAG1[ccINDEX],ccINDEX,3'b100};
 	       ccif.dstore[CPUID] = storeDATA1[ccINDEX][63:32];
 	       nxt_storeDIRTY1[ccINDEX] = 0;
-	       if(ccif.ccinv[CPUID])
-		 nxt_storeVALID1[ccINDEX] = 0;
+	       
 	    end
 
 	  CCcheck2:
@@ -870,8 +873,7 @@ module dcache
 	       ccif.daddr[CPUID] = {storeTAG2[ccINDEX],ccINDEX,3'b100};
 	       ccif.dstore[CPUID] = storeDATA2[ccINDEX][63:32];
 	       nxt_storeDIRTY2[ccINDEX] = 0;
-	       if(ccif.ccinv[CPUID])
-		 nxt_storeVALID2[ccINDEX] = 0;
+	       
 	    end
 	  
 	endcase // casez (state)
