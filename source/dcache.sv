@@ -444,14 +444,9 @@ module dcache
 		      nextstate = IDLE;
 		 end
 	    end
-   	  
+
 	  HALTstate:
-	    begin
-	       if(!ccif.dwait[CPUID])
-		 nextstate = FLUSHED1;
-	       else
-		 nextstate = HALTstate;
-	    end
+	    nextstate = FLUSHED1;
 
 	  FLUSHED1:
 	    begin
@@ -645,6 +640,7 @@ module dcache
 	  
 	  WRITEHIT1:
 	    begin
+	       nxt_storeDIRTY1[dINDEX] = 1;
 	       if(doffset)
 		 nxt_storeDATA1[dINDEX][63:32] = dcif.dmemstore;
 	       else
@@ -653,6 +649,7 @@ module dcache
 
 	  WRITEHIT2:
 	    begin
+	       nxt_storeDIRTY2[dINDEX] = 1;
 	       if(doffset)
 		 nxt_storeDATA2[dINDEX][63:32] = dcif.dmemstore;
 	       else
@@ -787,15 +784,6 @@ module dcache
 	       ccif.daddr[CPUID] = {storeTAG2[dINDEX],dINDEX,3'b100};
 	       ccif.dstore[CPUID] = storeDATA2[dINDEX][63:32];
 	       nxt_storeDIRTY2[dINDEX] = 0;
-	    end
-	  
-	  HALTstate:
-	    begin
-	       nxt_storeVALID1 = '{default:0};
-	       nxt_storeVALID2 = '{default:0};
-	       ccif.dWEN[CPUID] = 1;
-	       ccif.daddr[CPUID] = 32'h3100;
-	       ccif.dstore[CPUID] = HITcount;
 	    end
 	  
 	  FLUSHED1:

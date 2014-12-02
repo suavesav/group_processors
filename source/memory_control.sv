@@ -222,8 +222,8 @@ module memory_control (
 	ccif.ramREN = 0;
 	ccif.ccwait[0] = 0;
 	ccif.ccwait[1] = 0;
-	ccif.ccinv[0] = 0;
-	ccif.ccinv[1] = 0;
+	//ccif.ccinv[0] = 0;
+	//ccif.ccinv[1] = 0;
 	ccif.ccsnoopaddr[0] = 32'hFFFFFFFF;
 	ccif.ccsnoopaddr[1] = 32'hFFFFFFFF;
 	
@@ -232,11 +232,15 @@ module memory_control (
 	    begin
 	       ccif.ccwait[1] = 1;
 	       ccif.ccsnoopaddr[1] = ccif.daddr[0];
+	       ccif.ccinv[0] = 0;
+	       ccif.ccinv[1] = 0;
 	    end
 
 	       
 	  BUSRD0:
 	    begin
+	       ccif.ccinv[0] = 0;
+	       ccif.ccinv[1] = 0;
 	       ccif.ccwait[1] = 1;
 	       ccif.ccsnoopaddr[1] = ccif.daddr[0];
 	       ccif.ramaddr = ccif.daddr[1];
@@ -248,12 +252,16 @@ module memory_control (
 
 	  WRDX0:
 	    begin
+	       ccif.ccinv[0] = 0;
+	       ccif.ccinv[1] = 0;
 	       ccif.ccwait[1] = 1;
 	       ccif.ccsnoopaddr[1] = ccif.daddr[0];
 	    end
 	       
 	  BUSRDX0:
 	    begin
+	       ccif.ccinv[0] = 0;
+	       ccif.ccinv[1] = 1;
 	       ccif.ccwait[1] = 1;
 	       ccif.ccsnoopaddr[1] = ccif.daddr[0];
 	       //ccif.ccinv[1] = 1;
@@ -266,12 +274,16 @@ module memory_control (
 
 	  WRD1:
 	    begin
+	       ccif.ccinv[0] = 0;
+	       ccif.ccinv[1] = 0;
 	       ccif.ccwait[0] = 1;
 	       ccif.ccsnoopaddr[0] = ccif.daddr[1];
 	    end
 	       
 	  BUSRD1:
 	    begin
+	       ccif.ccinv[0] = 0;
+	       ccif.ccinv[1] = 0;
 	       ccif.ccwait[0] = 1;
 	       ccif.ccsnoopaddr[0] = ccif.daddr[1];
 	       ccif.ramaddr = ccif.daddr[0];
@@ -283,16 +295,19 @@ module memory_control (
 
 	  WRDX1:
 	    begin
+	       ccif.ccinv[0] = 0;
+	       ccif.ccinv[1] = 0;
 	       ccif.ccwait[0] = 1;
 	       ccif.ccsnoopaddr[0] = ccif.daddr[1];
-	       //nxt_snoop0 = ccif.daddr[1];
 	    end
 	       
 	  BUSRDX1:
 	    begin
+	       ccif.ccinv[0] = 1;
+	       ccif.ccinv[1] = 0;
 	       ccif.ccwait[0] = 1;
 	       ccif.ccsnoopaddr[0] = ccif.daddr[1];
-	       //ccif.ccinv[0] = 1;
+	       ccif.ccinv[0] = 1;
 	       ccif.ramaddr = ccif.daddr[0];
 	       ccif.ramWEN = ccif.dWEN[0];
 	       ccif.ramstore = ccif.dstore[0];
@@ -302,6 +317,8 @@ module memory_control (
 	 
 	  RAMRD0:
 	    begin
+	       ccif.ccinv[0] = 0;
+	       ccif.ccinv[1] = 0;
 	       ccif.ramREN = 1;
 	       ccif.ramaddr = ccif.daddr[0];
 	       ccif.dload[0] = ccif.ramload;
@@ -309,6 +326,8 @@ module memory_control (
 
 	  RAMWR0:
 	    begin
+	       ccif.ccinv[0] = 0;
+	       ccif.ccinv[1] = 0;
 	       ccif.ramWEN = 1;
 	       ccif.ramaddr = ccif.daddr[0];
 	       ccif.ramstore = ccif.dstore[0];
@@ -316,6 +335,8 @@ module memory_control (
 
 	  RAMRD1:
 	    begin
+	       ccif.ccinv[0] = 0;
+	       ccif.ccinv[1] = 0;
 	       ccif.ramREN = 1;
 	       ccif.ramaddr = ccif.daddr[1];
 	       ccif.dload[1] = ccif.ramload;
@@ -323,6 +344,8 @@ module memory_control (
 
 	  RAMWR1:
 	    begin
+	       ccif.ccinv[0] = 0;
+	       ccif.ccinv[1] = 0;
 	       ccif.ramWEN = 1;
 	       ccif.ramaddr = ccif.daddr[1];
 	       ccif.ramstore = ccif.dstore[1];
@@ -330,6 +353,8 @@ module memory_control (
 
 	  RAMRDI0:
 	    begin
+	       ccif.ccinv[0] = 0;
+	       ccif.ccinv[1] = 0;
 	       ccif.ramREN = 1;
 	       ccif.ramaddr = ccif.iaddr[0];
 	       ccif.iload[0] = ccif.ramload;
@@ -337,9 +362,16 @@ module memory_control (
 
 	  RAMRDI1:
 	    begin
+	       ccif.ccinv[0] = 0;
+	       ccif.ccinv[1] = 0;
 	       ccif.ramREN = 1;
 	       ccif.ramaddr = ccif.iaddr[1];
 	       ccif.iload[1] = ccif.ramload;
+	    end
+	  IDLE:
+	    begin
+	       ccif.ccinv[0] = 0;
+	       ccif.ccinv[1] = 0;
 	    end
 
 	endcase // casez (state)
