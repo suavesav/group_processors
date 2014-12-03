@@ -48,6 +48,9 @@ module dcache
    logic 	storeVALID2[7:0];
    logic 	storeDIRTY2[7:0];
 
+   word_t linkREG;
+   logic 	linkVALID; 	
+
    logic [25:0] nxt_storeTAG1[7:0];
    logic [63:0] nxt_storeDATA1[7:0];
    logic 	nxt_storeVALID1[7:0];
@@ -58,8 +61,11 @@ module dcache
    logic [25:0] nxt_storeTAG2[7:0];
    logic [63:0] nxt_storeDATA2[7:0];
    logic 	nxt_storeVALID2[7:0];
-   logic 	nxt_storeDIRTY2[7:0]; 
+   logic 	nxt_storeDIRTY2[7:0];
 
+   word_t nxt_linkREG;
+   logic 	nxt_linkVALID;
+   
    word_t HITcount;
    word_t nxt_HITcount;
    
@@ -85,6 +91,8 @@ module dcache
 	     LRUon1 <= '{default:0};
 	     HITcount <= '0;
 	     aINDEX <= '{default:0};
+	     linkREG <= '0;
+	     linkVALID <= 0;
 	  end
 	else
 	  begin
@@ -100,6 +108,8 @@ module dcache
 	     LRUon1 <= nxt_LRUon1;
 	     HITcount <= nxt_HITcount;
 	     aINDEX <= nxt_aINDEX;
+	     linkREG <= nxt_linkREG;
+	     linkVALID <= nxt_linkVALID;
 	  end
      end
 
@@ -563,13 +573,28 @@ module dcache
 	dcif.flushed = 0;
 	nxt_aINDEX = aINDEX;
 	ccif.ccwrite[CPUID] = 0;                  
-	ccif.cctrans[CPUID] = 0;                  
+	ccif.cctrans[CPUID] = 0;    
+        nxt_linkREG = linkREG;
+	nxt_linkVALID = linkVALID;
 	
 	casez(state)
 	  IDLE:
 	    begin
 	       if((dTAG == storeTAG1[dINDEX] || dTAG == storeTAG2[dINDEX]) && (dcif.dmemREN || dcif.dmemWEN))
 		 nxt_HITcount = HITcount + 1;
+	       if(dcif.datomic && dcif.dmemREN)
+		 begin
+		    nxt_linkREG = dcif.dmemaddr;
+		    nxt_linkVALID = 1;
+		 end
+	       if((ccif.ccsnoopaddr[CPUID] == linkREG) && ccif.ccinv[CPUID])
+		 nxt_linkVALID = 0;
+	    end
+
+	  LOAD:
+	    begin
+	       if(dcif.dmemWEN && (dcif.dmemaddr == linkREG))
+		 nxt_linkVALID = 0;
 	    end
 	  
 	  READM:
@@ -599,7 +624,7 @@ module dcache
 		 begin
 		    ccif.cctrans[CPUID] = 0;
 		    ccif.ccwrite[CPUID] = 0;
-		 end
+		 end // else: !if(!storeVALID2[dINDEX])
 	    end
 
 	  READ1clean:
@@ -637,25 +662,34 @@ module dcache
 	       ccif.daddr[CPUID] = '0;
 	       ccif.dREN[CPUID] = 0;	       
 	    end // case: READ2clean2
-	  
+
 	  WRITEHIT1:
 	    begin
 	       nxt_storeDIRTY1[dINDEX] = 1;
-	       if(doffset)
-		 nxt_storeDATA1[dINDEX][63:32] = dcif.dmemstore;
-	       else
-		 nxt_storeDATA1[dINDEX][31:0] = dcif.dmemstore;
+	       if(!dcif.datomic || ((dcif.dmemaddr == linkREG) && linkVALID))
+		 begin
+		    if(doffset)
+		      nxt_storeDATA1[dINDEX][63:32] = dcif.dmemstore;
+		    else
+		      nxt_storeDATA1[dINDEX][31:0] = dcif.dmemstore;
+		 end
 	    end
 
 	  WRITEHIT2:
 	    begin
 	       nxt_storeDIRTY2[dINDEX] = 1;
-	       if(doffset)
-		 nxt_storeDATA2[dINDEX][63:32] = dcif.dmemstore;
-	       else
-		 nxt_storeDATA2[dINDEX][31:0] = dcif.dmemstore;
+	       if(!dcif.datomic || ((dcif.dmemaddr == linkREG) && linkVALID))
+		 begin
+		    if(doffset)
+		      nxt_storeDATA2[dINDEX][63:32] = dcif.dmemstore;
+		    else
+		      nxt_storeDATA2[dINDEX][31:0] = dcif.dmemstore;
+		 end
 	    end
 
+	  //WRITEM:
+	    //nxt_linkVALID = 0;
+	  
 	  WRITE1clean:
 	    begin
 	       if(doffset)
@@ -889,7 +923,15 @@ module dcache
 	else if(((dTAG == storeTAG1[dINDEX] && storeVALID1[dINDEX]) || (dTAG == storeTAG2[dINDEX] && storeVALID2[dINDEX])) && dcif.dmemWEN && state == LOAD)
 	  begin
 	     dcif.dhit = 1;
-	     dcif.dmemload = '0;
+	     if(dcif.datomic)
+	       begin
+		  if((dcif.dmemaddr == linkREG) && linkVALID)
+		    dcif.dmemload = 32'd1;
+		  else
+		    dcif.dmemload = '0;
+	       end
+	     else
+	       dcif.dmemload = '0;
 	  end
 	else
 	  begin

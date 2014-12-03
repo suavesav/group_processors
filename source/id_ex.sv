@@ -34,6 +34,7 @@ module id_ex
 	     idexif.exiaddr <= '0;
 	     idexif.exrsel1 <= 0;
 	     idexif.exrsel2 <= 0;
+	     idexif.exdatomic <= 0;
 	  end
 	else if(idexif.idRST)
 	  begin
@@ -60,6 +61,7 @@ module id_ex
 	     idexif.exiaddr <= '0;
 	     idexif.exrsel1 <= 0;
 	     idexif.exrsel2 <= 0;
+	     idexif.exdatomic <= 0;
 	  end // if (idexif.idRST)
 	else if(idexif.idW)
 	  begin
@@ -86,6 +88,7 @@ module id_ex
 	     idexif.exiaddr <= idexif.idiaddr;
 	     idexif.exrsel1 <= idexif.idrsel1;
 	     idexif.exrsel2 <= idexif.idrsel2;
+	     idexif.exdatomic <= idexif.iddatomic;
 	  end
      end
 endmodule // DECODE_EXECUTE

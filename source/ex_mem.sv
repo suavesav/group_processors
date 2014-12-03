@@ -22,6 +22,7 @@ module ex_mem
 	     exmemif.meminstr <= '0;
 	     exmemif.memLUIflag <= 0;
 	     exmemif.memRegDst <= 0;
+	     exmemif.memdatomic <= 0;
 	  end
 	else if(exmemif.exW)
 	  begin
@@ -36,6 +37,7 @@ module ex_mem
 	     exmemif.meminstr <= exmemif.exinstr;
 	     exmemif.memLUIflag <= exmemif.exLUIflag;
 	     exmemif.memRegDst <= exmemif.exRegDst;
+	     exmemif.memdatomic <= exmemif.exdatomic;
 	  end
 	else if(exmemif.exRST)
 	  begin
@@ -50,6 +52,7 @@ module ex_mem
 	     exmemif.meminstr <= '0;
 	     exmemif.memLUIflag <= 0;
 	     exmemif.memRegDst <= 0;
+	     exmemif.memdatomic <= 0;
 	  end
      end // always_ff @
    

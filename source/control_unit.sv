@@ -36,6 +36,7 @@ module control_unit
 	cuif.SHIFTflag = 0;
 	cuif.LUIflag = 0;
 	cuif.cuHALT = 0;
+	cuif.datomic = 0;
 	
 	if(cuif.instr[31:26] == 6'b000000) //R-TYPE
 	  begin
@@ -161,6 +162,26 @@ module control_unit
 	  begin
 	     cuif.cuIRE = 0;
 	     cuif.cuHALT = 1;
+	  end
+	else if(cuif.instr[31:26] == 6'b110000) //LL
+	  begin
+	     cuif.ALUsrc = 1;
+	     cuif.WEN = 1;
+	     cuif.cuDRE = 1;
+	     cuif.EXTop = 1;
+	     cuif.MemToReg = 1;
+	     cuif.ALUOP = ALU_ADD;
+	     cuif.datomic = 1;
+	  end
+	else if(cuif.instr[31:26] == 6'b111000) //SC
+	  begin
+	     cuif.ALUsrc = 1;
+	     cuif.WEN = 1;
+	     cuif.cuDWE = 1;
+	     cuif.EXTop = 1;
+	     cuif.ALUOP = ALU_ADD;
+	     cuif.MemToReg = 1;
+	     cuif.datomic = 1;
 	  end
 	else if(cuif.instr == 32'd0) //NOP
 	  begin

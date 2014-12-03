@@ -11,16 +11,17 @@ interface control_unit_if;
    logic cuDRE, cuDWE, cuIRE, cuHALT;
    aluop_t ALUOP;
    logic ALUsrc, EXTop, RegDst, MemToReg, SHIFTflag, LUIflag;
-
+   logic datomic;
+   
    //CU ports
    modport cu(
 	      input instr,
-	      output WEN, brnch_eq, brnch_ne, jmp, JR, JALflag, cuDRE, cuDWE, cuIRE, cuHALT, ALUOP, ALUsrc, EXTop, RegDst, MemToReg, SHIFTflag, LUIflag
+	      output WEN, brnch_eq, brnch_ne, jmp, JR, JALflag, cuDRE, cuDWE, cuIRE, cuHALT, ALUOP, ALUsrc, EXTop, RegDst, MemToReg, SHIFTflag, LUIflag, datomic
 	      );
 
    //CU TB
    modport tb (
-	       input WEN, brnch_eq, brnch_ne, jmp, JR, JALflag, cuDRE, cuDWE, cuIRE, cuHALT, ALUOP, ALUsrc, EXTop, RegDst, MemToReg, SHIFTflag, LUIflag,
+	       input WEN, brnch_eq, brnch_ne, jmp, JR, JALflag, cuDRE, cuDWE, cuIRE, cuHALT, ALUOP, ALUsrc, EXTop, RegDst, MemToReg, SHIFTflag, LUIflag, datomic,
 	       output instr
 	       );
 

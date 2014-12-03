@@ -33,7 +33,7 @@ module datapath (
    
 
    //DEFINITIONS
-   logic 		     pcWEN, Negative, Overflow, datomic = 0;
+   logic 		     pcWEN, Negative, Overflow;
    logic 		     hazard_mem_1, hazard_mem_2, hazard_wb_1, hazard_wb_2;
    word_t       iaddr, addr, temp_addr;
 
@@ -54,7 +54,6 @@ module datapath (
    assign dpif.imemREN = hzif.cuHALT ? 0 : 1;
    assign dpif.imemaddr = iaddr;
    assign dpif.halt = memif.wbcuHALT;
-   assign dpif.datomic = datomic;
    assign Negative = aluif.Negative;
    assign Overflow = aluif.Overflow;
 
@@ -101,6 +100,9 @@ module datapath (
    assign hzif.cujmp = cuif.jmp;
    assign hzif.cuJR = cuif.JR;
    assign hzif.cuJALflag = cuif.JALflag;
+
+   //LL/SC
+   assign idif.iddatomic = cuif.datomic;
    
    //Execute Cycle
    //FROM ID/EX REG
@@ -189,6 +191,9 @@ module datapath (
 	else
 	  exif.exrdat2 = idif.exrdat2;
      end // always_comb
+
+   //LL/SC
+   assign exif.exdatomic = idif.exdatomic;
    
    
    //Memory Cycle
@@ -205,6 +210,8 @@ module datapath (
    assign dpif.dmemWEN = exif.memcuDWE;
    assign dpif.dmemaddr = exif.memOutput_Port;
    assign dpif.dmemstore = exif.memrdat2;
+
+   assign dpif.datomic = exif.memdatomic;
    
    //TO MEM/WB REG
    assign memif.memdmemload = dpif.dmemload;
