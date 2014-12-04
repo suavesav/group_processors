@@ -253,7 +253,7 @@ module memory_control (
 	  WRDX0:
 	    begin
 	       ccif.ccinv[0] = 0;
-	       ccif.ccinv[1] = 0;
+	       ccif.ccinv[1] = 1;
 	       ccif.ccwait[1] = 1;
 	       ccif.ccsnoopaddr[1] = ccif.daddr[0];
 	    end
@@ -295,7 +295,7 @@ module memory_control (
 
 	  WRDX1:
 	    begin
-	       ccif.ccinv[0] = 0;
+	       ccif.ccinv[0] = 1;
 	       ccif.ccinv[1] = 0;
 	       ccif.ccwait[0] = 1;
 	       ccif.ccsnoopaddr[0] = ccif.daddr[1];

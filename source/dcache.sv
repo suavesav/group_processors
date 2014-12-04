@@ -177,7 +177,7 @@ module dcache
 		 end // if (!ccif.ccwait[CPUID])
 	       else
 		 begin
-		    if(ccTAG == storeTAG1[ccINDEX] || ccTAG == storeTAG2[ccINDEX])
+		    if((ccTAG == storeTAG1[ccINDEX] && storeVALID1[ccINDEX]) || (ccTAG == storeTAG2[ccINDEX] && storeVALID2[ccINDEX]))
 		      nextstate = CCcheck;
 		    else
 		      nextstate = IDLE;
@@ -515,14 +515,14 @@ module dcache
 
 	  CCcheck:
 	    begin
-	       if(ccTAG == storeTAG1[ccINDEX])
+	       if(ccTAG == storeTAG1[ccINDEX] && storeVALID1[ccINDEX])
 		 begin
 		    if(!ccif.dwait[CPUID])
 		      nextstate = CCcheck1;
 		    else
 		      nextstate = CCcheck;
 		 end
-	       else if(ccTAG == storeTAG2[ccINDEX])
+	       else if(ccTAG == storeTAG2[ccINDEX] && storeVALID2[ccINDEX])
 		 begin
 		    if(!ccif.dwait[CPUID])
 		      nextstate = CCcheck2;
@@ -530,7 +530,7 @@ module dcache
 		      nextstate = CCcheck;
 		 end
 	       else
-	       nextstate = IDLE;
+		 nextstate = IDLE;
 	    end // case: CCcheck
 
 	  CCcheck1:
@@ -587,7 +587,7 @@ module dcache
 		    nxt_linkREG = dcif.dmemaddr;
 		    nxt_linkVALID = 1;
 		 end
-	       if((ccif.ccsnoopaddr[CPUID] == linkREG) && ccif.ccinv[CPUID])
+	       if(({ccTAG,ccINDEX,3'b000} == linkREG || {ccTAG,ccINDEX,3'b100} == linkREG) && ccif.ccinv[CPUID])
 		 nxt_linkVALID = 0;
 	    end
 
@@ -711,7 +711,7 @@ module dcache
 		 end
 	       ccif.dREN[CPUID] = 1;
 	       
-	       if(!storeVALID1[dINDEX])
+	       /*if(!storeVALID1[dINDEX])
 		 begin
 		    ccif.cctrans[CPUID] = 1;
 		    if(!storeDIRTY1[dINDEX])
@@ -727,7 +727,10 @@ module dcache
 		 begin
 		    ccif.cctrans[CPUID] = 0;
 		    ccif.ccwrite[CPUID] = 0;
-		 end
+		 end*/ // case: WRITE1clean
+	       ccif.cctrans[CPUID] = 1;
+	       ccif.ccwrite[CPUID] = 1;
+	       
 	    end // case: WRITE1clean
 
 	  WRITE1clean2:
@@ -761,7 +764,7 @@ module dcache
 		 end
 	       ccif.dREN[CPUID] = 1;
 
-	       if(storeVALID1[dINDEX])
+	       /*if(storeVALID1[dINDEX])
 		 begin
 		    ccif.cctrans[CPUID] = 1;
 		    if(storeDIRTY1[dINDEX])
@@ -777,7 +780,9 @@ module dcache
 		 begin
 		    ccif.cctrans[CPUID] = 0;
 		    ccif.ccwrite[CPUID] = 0;
-		 end
+		 end*/ // case: WRITE2clean
+	       ccif.cctrans[CPUID] = 1;
+	       ccif.ccwrite[CPUID] = 1;
 	    end // case: WRITE1clean
 
 	  WRITE2clean2:
@@ -862,7 +867,7 @@ module dcache
 
 	  CCcheck:
 	    begin
-	       if(ccTAG == storeTAG1[ccINDEX])
+	       if(ccTAG == storeTAG1[ccINDEX] && storeVALID1[ccINDEX])
 		 begin
 		    ccif.dWEN[CPUID] = 1;
 		    ccif.daddr[CPUID] = {storeTAG1[ccINDEX],ccINDEX,3'b000};
@@ -870,7 +875,7 @@ module dcache
 		    if(ccif.ccinv[CPUID])
 		      nxt_storeVALID1[ccINDEX] = 0;
 		 end
-	       else if(ccTAG == storeTAG2[ccINDEX])
+	       else if(ccTAG == storeTAG2[ccINDEX] && storeVALID2[ccINDEX])
 		 begin
 		    ccif.dWEN[CPUID] = 1;
 		    ccif.daddr[CPUID] = {storeTAG2[ccINDEX],ccINDEX,3'b000};
