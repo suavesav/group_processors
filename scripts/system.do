@@ -20,6 +20,8 @@ add wave -noupdate /system_tb/DUT/CPU/DP0/dpif/dmemstore
 add wave -noupdate /system_tb/DUT/CPU/DP0/dpif/dmemaddr
 add wave -noupdate /system_tb/DUT/CPU/dcif0/datomic
 add wave -noupdate -divider {CORE 2 RF}
+add wave -noupdate /system_tb/DUT/CPU/DP1/PC/addr
+add wave -noupdate /system_tb/DUT/CPU/DP1/PC/iaddr
 add wave -noupdate /system_tb/DUT/CPU/DP1/rfif/WEN
 add wave -noupdate -radix unsigned /system_tb/DUT/CPU/DP1/rfif/wsel
 add wave -noupdate /system_tb/DUT/CPU/DP1/rfif/wdat
@@ -410,7 +412,7 @@ add wave -noupdate /system_tb/DUT/CPU/CM0/ccif/ramload
 add wave -noupdate /system_tb/DUT/CPU/CC/state
 add wave -noupdate /system_tb/DUT/CPU/CC/nextstate
 TreeUpdate [SetDefaultTree]
-WaveRestoreCursors {{Cursor 1} {7380546 ps} 0}
+WaveRestoreCursors {{Cursor 1} {72539 ps} 0}
 quietly wave cursor active 1
 configure wave -namecolwidth 150
 configure wave -valuecolwidth 100
@@ -426,4 +428,4 @@ configure wave -griddelta 40
 configure wave -timeline 0
 configure wave -timelineunits ns
 update
-WaveRestoreZoom {7208602 ps} {7687589 ps}
+WaveRestoreZoom {0 ps} {478987 ps}

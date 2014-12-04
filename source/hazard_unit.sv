@@ -21,7 +21,7 @@ module hazard_unit
 	     hzif.idRST = 0; //hzif.idRST;
 	     hzif.exRST = 0; //hzif.exRST;
 	  end
-	else if(hzif.dhit && !hzif.cuHALT)
+	else if(hzif.dhit && !hzif.cuHALT && !hzif.val_brnch)
 	  begin
 	     hzif.ifW = 1;
 	     hzif.ifRST = 0;
