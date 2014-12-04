@@ -22,9 +22,10 @@ module memory_control (
 
   // number of cpus for cc
   parameter CPUS = 2;
-  
 
-   typedef enum logic [4:0] {IDLE, BUSRD0, WRD0, BUSRD1, WRD1, BUSRDX0, WRDX0, BUSRDX1, WRDX1, RAMRD0, RAMWR0, RAMRD1, RAMWR1, RAMRDI0, RAMRDI1} STATE;
+   word_t nxt_snoop0, nxt_snoop1;
+   
+   typedef enum logic [4:0] {IDLE, BUSRD0, WRD0, WRD0_2, BUSRD1, WRD1, WRD1_2, BUSRDX0, WRDX0, WRDX0_2, BUSRDX1, WRDX1, WRDX1_2, RAMRD0, RAMWR0, RAMRD1, RAMWR1, RAMRDI0, RAMRDI1} STATE;
 
    STATE state,nextstate;
 
@@ -33,10 +34,14 @@ module memory_control (
       if(!nRST)
 	begin
 	   state <= IDLE;
+	   ccif.ccsnoopaddr[0] <= 32'hFFFF;
+	   ccif.ccsnoopaddr[1] <= 32'hFFFF;
 	end
       else
 	begin
 	   state <= nextstate;
+	   ccif.ccsnoopaddr[0] <= nxt_snoop0;
+	   ccif.ccsnoopaddr[1] <= nxt_snoop1;
 	end
      end // always_ff @
    
@@ -75,7 +80,11 @@ module memory_control (
 			 else
 			   nextstate = RAMWR1;
 		      end
-		 end
+		 end // if (ccif.dREN[1] || ccif.dWEN[1])
+	       else if(ccif.cctrans[1] && ccif.ccwrite[1])
+		 nextstate = WRD1;
+	       else if(ccif.cctrans[0] && ccif.ccwrite[0])
+		 nextstate = WRD0;
 	       else if(ccif.iREN[0])
 		 nextstate = RAMRDI0;
 	       else if(ccif.iREN[1])
@@ -85,6 +94,9 @@ module memory_control (
 	    end // case: IDLE
 
 	  WRD0:
+	    nextstate = WRD0_2;
+
+	  WRD0_2:
 	    nextstate = BUSRD0;
 	  
 	  BUSRD0:
@@ -103,6 +115,9 @@ module memory_control (
 	    end 
 
 	  WRDX0:
+	    nextstate = WRDX0_2;
+
+	  WRDX0_2:
 	    nextstate = BUSRDX0;
 	  
 	  BUSRDX0:
@@ -121,6 +136,9 @@ module memory_control (
 	    end 
 
 	  WRD1:
+	    nextstate = WRD1_2;
+
+	  WRD1_2:
 	    nextstate = BUSRD1;
 	  
 	  BUSRD1:
@@ -139,6 +157,9 @@ module memory_control (
 	    end
 
 	  WRDX1:
+	    nextstate = WRDX1_2;
+
+	  WRDX1_2:
 	    nextstate = BUSRDX1;
 	  
 	  BUSRDX1:
@@ -222,16 +243,26 @@ module memory_control (
 	ccif.ramREN = 0;
 	ccif.ccwait[0] = 0;
 	ccif.ccwait[1] = 0;
-	//ccif.ccinv[0] = 0;
-	//ccif.ccinv[1] = 0;
-	ccif.ccsnoopaddr[0] = 32'hFFFFFFFF;
-	ccif.ccsnoopaddr[1] = 32'hFFFFFFFF;
-	
+	//ccif.ccsnoopaddr[0] = 32'hFFFFFFFF;
+	//ccif.ccsnoopaddr[1] = 32'hFFFFFFFF;
+	nxt_snoop0 = ccif.ccsnoopaddr[0];
+	nxt_snoop1 = ccif.ccsnoopaddr[1];
+		
 	casez(state)
 	  WRD0:
 	    begin
 	       ccif.ccwait[1] = 1;
-	       ccif.ccsnoopaddr[1] = ccif.daddr[0];
+	       //ccif.ccsnoopaddr[1] = ccif.daddr[0];
+	       nxt_snoop1 = ccif.daddr[0];
+	       ccif.ccinv[0] = 0;
+	       ccif.ccinv[1] = 0;
+	    end
+
+	  WRD0_2:
+	    begin
+	       ccif.ccwait[1] = 1;
+	       //ccif.ccsnoopaddr[1] = ccif.daddr[0];
+	       nxt_snoop1 = ccif.daddr[0];
 	       ccif.ccinv[0] = 0;
 	       ccif.ccinv[1] = 0;
 	    end
@@ -242,7 +273,8 @@ module memory_control (
 	       ccif.ccinv[0] = 0;
 	       ccif.ccinv[1] = 0;
 	       ccif.ccwait[1] = 1;
-	       ccif.ccsnoopaddr[1] = ccif.daddr[0];
+	       //ccif.ccsnoopaddr[1] = ccif.daddr[0];
+	       nxt_snoop1 = ccif.daddr[0];
 	       ccif.ramaddr = ccif.daddr[1];
 	       ccif.ramWEN = ccif.dWEN[1];
 	       ccif.ramstore = ccif.dstore[1];
@@ -255,16 +287,26 @@ module memory_control (
 	       ccif.ccinv[0] = 0;
 	       ccif.ccinv[1] = 1;
 	       ccif.ccwait[1] = 1;
-	       ccif.ccsnoopaddr[1] = ccif.daddr[0];
+	       //ccif.ccsnoopaddr[1] = ccif.daddr[0];
+	       nxt_snoop1 = ccif.daddr[0];
 	    end
-	       
+
+	  WRDX0_2:
+	    begin
+	       ccif.ccinv[0] = 0;
+	       ccif.ccinv[1] = 1;
+	       ccif.ccwait[1] = 1;
+	       //ccif.ccsnoopaddr[1] = ccif.daddr[0];
+	       nxt_snoop1 = ccif.daddr[0];
+	    end
+	    
 	  BUSRDX0:
 	    begin
 	       ccif.ccinv[0] = 0;
 	       ccif.ccinv[1] = 1;
 	       ccif.ccwait[1] = 1;
-	       ccif.ccsnoopaddr[1] = ccif.daddr[0];
-	       //ccif.ccinv[1] = 1;
+	       //ccif.ccsnoopaddr[1] = ccif.daddr[0];
+	       nxt_snoop1 = ccif.daddr[0];
 	       ccif.ramaddr = ccif.daddr[1];
 	       ccif.ramWEN = ccif.dWEN[1];
 	       ccif.ramstore = ccif.dstore[1];
@@ -277,7 +319,17 @@ module memory_control (
 	       ccif.ccinv[0] = 0;
 	       ccif.ccinv[1] = 0;
 	       ccif.ccwait[0] = 1;
-	       ccif.ccsnoopaddr[0] = ccif.daddr[1];
+	       //ccif.ccsnoopaddr[0] = ccif.daddr[1];
+	       nxt_snoop0 = ccif.daddr[1];
+	    end
+
+	  WRD1_2:
+	    begin
+	       ccif.ccinv[0] = 0;
+	       ccif.ccinv[1] = 0;
+	       ccif.ccwait[0] = 1;
+	       //ccif.ccsnoopaddr[0] = ccif.daddr[1];
+	       nxt_snoop0 = ccif.daddr[1];
 	    end
 	       
 	  BUSRD1:
@@ -285,7 +337,8 @@ module memory_control (
 	       ccif.ccinv[0] = 0;
 	       ccif.ccinv[1] = 0;
 	       ccif.ccwait[0] = 1;
-	       ccif.ccsnoopaddr[0] = ccif.daddr[1];
+	       //ccif.ccsnoopaddr[0] = ccif.daddr[1];
+	       nxt_snoop0 = ccif.daddr[1];
 	       ccif.ramaddr = ccif.daddr[0];
 	       ccif.ramWEN = ccif.dWEN[0];
 	       ccif.ramstore = ccif.dstore[0];
@@ -298,7 +351,17 @@ module memory_control (
 	       ccif.ccinv[0] = 1;
 	       ccif.ccinv[1] = 0;
 	       ccif.ccwait[0] = 1;
-	       ccif.ccsnoopaddr[0] = ccif.daddr[1];
+	       //ccif.ccsnoopaddr[0] = ccif.daddr[1];
+	       nxt_snoop0 = ccif.daddr[1];
+	    end
+
+	  WRDX1_2:
+	    begin
+	       ccif.ccinv[0] = 1;
+	       ccif.ccinv[1] = 0;
+	       ccif.ccwait[0] = 1;
+	       //ccif.ccsnoopaddr[0] = ccif.daddr[1];
+	       nxt_snoop0 = ccif.daddr[1];
 	    end
 	       
 	  BUSRDX1:
@@ -306,7 +369,8 @@ module memory_control (
 	       ccif.ccinv[0] = 1;
 	       ccif.ccinv[1] = 0;
 	       ccif.ccwait[0] = 1;
-	       ccif.ccsnoopaddr[0] = ccif.daddr[1];
+	       //ccif.ccsnoopaddr[0] = ccif.daddr[1];
+	       nxt_snoop0 = ccif.daddr[1];
 	       ccif.ccinv[0] = 1;
 	       ccif.ramaddr = ccif.daddr[0];
 	       ccif.ramWEN = ccif.dWEN[0];

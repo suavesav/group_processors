@@ -35,6 +35,8 @@ interface cache_control_if;
   logic   [CPUS-1:0]      ccwait, ccinv;
   logic   [CPUS-1:0]      ccwrite, cctrans;
   word_t  [CPUS-1:0]      ccsnoopaddr;
+   logic [CPUS-1:0] 	  ccdone;
+ 		  
 
   // ram side
   logic                   ramWEN, ramREN;
@@ -54,7 +56,7 @@ interface cache_control_if;
             // ram outputs
             ramstore, ramaddr, ramWEN, ramREN,
             // coherence outputs to cache
-            ccwait, ccinv, ccsnoopaddr
+            ccwait, ccinv, ccsnoopaddr, ccdone
   );
 
   // icache ports to controller
@@ -66,13 +68,13 @@ interface cache_control_if;
   // dcache ports to controller
   modport dcache (
     input   dwait, dload,
-            ccwait, ccinv, ccsnoopaddr,
+            ccwait, ccinv, ccsnoopaddr, ccdone,
     output  dREN, dWEN, daddr, dstore,
             ccwrite, cctrans
   );
   modport caches (
     input   iwait, iload, dwait, dload,
-            ccwait, ccinv, ccsnoopaddr,
+            ccwait, ccinv, ccsnoopaddr, ccdone,
     output  iREN, iaddr, dREN, dWEN, daddr, dstore,
             ccwrite, cctrans
   );
